@@ -74,8 +74,7 @@ int show_wtp_wifi_locate_public_config_all_cmd(dbus_parameter parameter, DBusCon
 	//unsigned int index = 0;
 	unsigned char channel_flag = 0;
 	int retu = 0;
-	printf("555555555555555555555frequency = %d line:%d,%s\n",frequency,__LINE__,__func__);
-
+	
 	if((frequency < 0) || (frequency > 1))
 	{
 		return 0;
@@ -108,7 +107,7 @@ int show_wtp_wifi_locate_public_config_all_cmd(dbus_parameter parameter, DBusCon
 					 channel_flag,
 					 connection
 				  );
-			printf("6666666666666666666666, ret = %d%d,%s\n",ret ,__LINE__,__func__);
+			
 	
 		}
 		else
@@ -674,7 +673,9 @@ int set_wifi_locate_public_para_cmd(unsigned int local_id,int instance_id,unsign
 										unsigned short port,unsigned short scan_interval,
 										unsigned short scan_time,unsigned long long channellist,
 										unsigned char scan_type,unsigned short report_interval,
-										unsigned char rssi,unsigned char isenable,
+										unsigned char rssi,unsigned char version_num, 
+										unsigned char result_filter,unsigned char isenable,
+										
 										unsigned char channel_flag,void* connection)/*返回0表示失败，返回1表示成功*/
 																  /*返回-1表示port  should be 1 to 65535*/
 																  /*返回-2表示scan_interval  should be 0 to 2000*/
@@ -720,16 +721,18 @@ int set_wifi_locate_public_para_cmd(unsigned int local_id,int instance_id,unsign
 	unsigned int(*dcli_init_func)(
 		                             int,
 							unsigned int ,
-							unsigned char ,
 							unsigned char *,	
-							unsigned short ,
-							unsigned char ,
-							unsigned long long ,
-							unsigned short ,
-							unsigned short ,
-							unsigned char ,
 							unsigned int ,
 							unsigned short ,
+							unsigned short ,
+							unsigned short ,
+							unsigned long long ,
+							unsigned char ,
+							unsigned short ,
+							unsigned char ,
+							unsigned char ,
+							unsigned char ,
+							unsigned char ,
 							unsigned char ,
 							DBusConnection *
 						);
@@ -741,7 +744,7 @@ int set_wifi_locate_public_para_cmd(unsigned int local_id,int instance_id,unsign
 		{
 			ret =(*dcli_init_func)
 				  (
-				     (int)local_id,
+				     local_id,
 					 index,
 					 isenable,
 					 wtpMac,	
@@ -751,6 +754,8 @@ int set_wifi_locate_public_para_cmd(unsigned int local_id,int instance_id,unsign
 					 scan_interval,
 					 scan_time,
 					 rssi,
+					 version_num,
+	                 result_filter,
 					 ip,
 					 port,
 					 channel_flag,
@@ -828,6 +833,129 @@ int set_wifi_locate_change_on_off_all_wtp_cmd(unsigned int local_id,int instance
 	else
 		return 0;
 }
+
+
+int set_wifi_locate_change_version_cmd(unsigned int local_id,unsigned int instance_id,
+									   unsigned char *wtpMac,
+									   unsigned char version_num,
+									   unsigned char channel_flag,
+									   void *connection)/*返回0表示失败，返回1表示成功*/
+{
+	if(NULL == wtpMac)
+		return 0;
+
+	if((channel_flag < 0) || (channel_flag > 1))
+	{
+		return 0;
+	}
+
+	unsigned int ret = 0;
+	unsigned int index = 0;
+	index = instance_id;
+	
+	unsigned int(*dcli_init_func)(
+							unsigned int , 
+							unsigned int , 
+							unsigned char* ,
+							unsigned char ,
+							unsigned char ,
+							DBusConnection *
+						);
+
+	if(NULL != ccgi_dl_handle)
+	{
+		dcli_init_func = dlsym(ccgi_dl_handle,"snmp_wifi_locate_change_version_num");
+		if(NULL != dcli_init_func)
+		{
+			
+			ret =(*dcli_init_func)
+				  (
+				  	 (int)local_id,
+					 index,
+					 wtpMac,
+					 version_num,
+					 channel_flag,
+					 connection
+				  );
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		return 0;
+	}
+
+	if(ret == 0)
+		return 1;
+	else
+		return 0;
+}
+
+
+int set_wifi_locate_change_filter_cmd( unsigned int local_id,unsigned int instance_id,
+									   unsigned char *wtpMac,
+									   unsigned char filter,
+									   unsigned char channel_flag,
+									   void *connection)/*返回0表示失败，返回1表示成功*/
+{
+	if(NULL == wtpMac)
+		return 0;
+
+	if((channel_flag < 0) || (channel_flag > 1))
+	{
+		return 0;
+	}
+
+	unsigned int ret = 0;
+	unsigned int index = 0;
+	index = instance_id;
+	
+	unsigned int(*dcli_init_func)(			
+							unsigned int ,
+							unsigned int , 
+							unsigned char* ,
+							unsigned char ,
+							unsigned char ,
+							DBusConnection *
+						);
+
+	if(NULL != ccgi_dl_handle)
+	{
+		dcli_init_func = dlsym(ccgi_dl_handle,"snmp_wifi_locate_change_result_filter");
+		if(NULL != dcli_init_func)
+		{
+			ret =(*dcli_init_func)
+				  (
+				     (int)local_id,
+					 index,
+					 wtpMac,
+					 filter,
+					 channel_flag,
+					 connection
+				  );
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		return 0;
+	}
+
+	if(ret == 0)
+		return 1;
+	else
+		return 0;
+}
+
+
+
+
 
 #ifdef __cplusplus
 }

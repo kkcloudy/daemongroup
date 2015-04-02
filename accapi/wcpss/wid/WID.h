@@ -199,7 +199,7 @@ typedef struct RADIOLIST
 	struct RADIOLIST	*next;
 }radioList;
 
-typedef struct
+/*typedef struct
 {
 	u_int32_t	 groupid;	
 	unsigned short report_interval;
@@ -214,9 +214,9 @@ typedef struct
 	unsigned int radio_count;
 	radioList	*radiolist;
 	
-	unsigned char state; /*SNMP*/
+	unsigned char state; 
 
-	/*for wifi-locate-0 use begin*/
+	
 	unsigned short report_interval_5_8G;
 	unsigned short report_pattern_5_8G;
 	unsigned char scan_type_5_8G;
@@ -226,8 +226,8 @@ typedef struct
 	unsigned char rssi_5_8G;
 	unsigned int server_ip_5_8G;
 	unsigned short server_port_5_8G;
-	/*for wifi-locate-0 use end*/
-}WID_WIFI_LOCATE_CONFIG_GROUP;
+	
+}WID_WIFI_LOCATE_CONFIG_GROUP;*/
 
 struct wid_rrm_config_group
 {
@@ -265,11 +265,12 @@ typedef enum{
 	server_port_type=7
 }wifi_locate_general_parameter_type;
 
-typedef enum{
+/*typedef enum{
 	unkonwn_special_type=0,
 	rssi_type=1,
 	scan_type_type=2
-}wifi_locate_special_parameter_type;
+}wifi_locate_special_parameter_type;*/
+
 /* lilong add 2014.12.01 */
 typedef enum{
 	LEVEL_AP	= 0,
@@ -1088,6 +1089,40 @@ struct wlan_service_control{
 	unsigned int times;
 	int is_once;
 };
+
+typedef struct
+{
+	u_int32_t	 groupid;	
+	unsigned short report_interval;
+	unsigned short report_pattern;
+	unsigned char scan_type;
+	unsigned long long channel;
+	unsigned short channel_scan_interval;
+	unsigned short channel_scan_dwell;
+	unsigned char rssi;
+	unsigned char version_num;
+	unsigned char result_filter;
+	unsigned int server_ip;
+	unsigned short server_port;
+	unsigned int radio_count;
+	radioList	*radiolist;
+	
+	unsigned char state; /*SNMP*/
+
+	/*for wifi-locate-0 use begin*/
+	unsigned short report_interval_5_8G;
+	unsigned short report_pattern_5_8G;
+	unsigned char scan_type_5_8G;
+	unsigned long long channel_5_8G;
+	unsigned short channel_scan_interval_5_8G;
+	unsigned short channel_scan_dwell_5_8G;
+	unsigned char rssi_5_8G;
+	unsigned int server_ip_5_8G;
+	unsigned short server_port_5_8G;
+	unsigned char version_num_5_8G;
+	unsigned char result_filter_5_8G;
+	/*for wifi-locate-0 use end*/
+}WID_WIFI_LOCATE_CONFIG_GROUP;
 struct vlan_id{
 	unsigned short vlanId;
 	struct vlan_id *next;
@@ -2116,6 +2151,13 @@ typedef enum{
 	sharebandwidth_type,
 	resourcesharescale_type
 }qos_parameter_type;
+typedef enum{
+	unkonwn_special_type=0,
+	rssi_type=1,
+	scan_type_type=2,
+	version_num_type=3,
+	result_filter_type=4
+}wifi_locate_special_parameter_type;
 
 struct model_info {
  char	*model;

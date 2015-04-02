@@ -843,6 +843,18 @@ rc = wtpWifiPositionRssiThreshold_get(rowreq_ctx, (long *)var->val.string );
     var->val_len = sizeof(u_long);
     var->type = ASN_INTEGER;
 rc = wtpWifiPositionScanSwitch_get(rowreq_ctx, (u_long *)var->val.string );
+		break;
+		
+	case COLUMN_WTPWIFIPOSITIONVERSION:
+	var->val_len = sizeof(u_long);
+	var->type = ASN_INTEGER;
+rc = wtpWifiPositionVersion_get(rowreq_ctx, (u_long *)var->val.string);
+		break;
+		
+	case COLUMN_WTPWIFIPOSITIONFILTER:
+	var->val_len = sizeof(u_long);
+	var->type = ASN_INTEGER;
+rc = wtpWifiPositionFilter_get(rowreq_ctx, (u_long *)var->val.string);
         break;
 
      default:
@@ -1207,9 +1219,64 @@ _dot11WtpWifiPositionPublicInfoTable_check_column( dot11WtpWifiPositionPublicInf
     }
         break;
 
-        default: /** We shouldn't get here */
-            rc = SNMP_ERR_GENERR;
-            snmp_log(LOG_ERR, "unknown column %d in _dot11WtpWifiPositionPublicInfoTable_check_column\n", column);
+/*********wangchao add for wifi_locate*********/
+   case COLUMN_WTPWIFIPOSITIONVERSION:
+   rc = netsnmp_check_vb_type_and_size( var, ASN_INTEGER,
+	   sizeof( rowreq_ctx->data.wtpWifiPositionVersion ) );
+   /* check defined range(s). */
+   if( (SNMPERR_SUCCESS == rc)
+	  && ((*var->val.integer < 0) || (*var->val.integer > 1000))
+	) {
+	   rc = SNMP_ERR_WRONGVALUE;
+   }
+   if(SNMPERR_SUCCESS != rc) {
+	   DEBUGMSGTL(("dot11WtpWifiPositionPublicInfoTable:_dot11WtpWifiPositionPublicInfoTable_check_column:wtpWifiPositionVersion",
+				   "varbind validation failed (eg bad type or size)\n"));
+   }
+   else {
+	   rc = wtpWifiPositionVersion_check_value( rowreq_ctx, *((u_long *)var->val.string) );
+	   if((MFD_SUCCESS != rc) && (MFD_NOT_VALID_EVER != rc) &&
+		  (MFD_NOT_VALID_NOW != rc)) {
+		   snmp_log(LOG_ERR, "bad rc %d from wtpWifiPositionVersion_check_value\n", rc);
+		   rc = SNMP_ERR_GENERR;
+	   }
+   }
+   
+   break;
+
+   case COLUMN_WTPWIFIPOSITIONFILTER:
+   rc = netsnmp_check_vb_type_and_size( var, ASN_INTEGER,
+	   sizeof( rowreq_ctx->data.wtpWifiPositionFilter ) );
+   /* check that the value is one of defined enums */
+   if( (SNMPERR_SUCCESS == rc)
+&& ( *var->val.integer != WTPWIFIPOSITIONFILTER_OFF )
+&& ( *var->val.integer != WTPWIFIPOSITIONFILTER_ON )
+	   ) {
+	   rc = SNMP_ERR_WRONGVALUE;
+	   }
+   if(SNMPERR_SUCCESS != rc) {
+	   DEBUGMSGTL(("dot11WtpWifiPositionPublicInfoTable:_dot11WtpWifiPositionPublicInfoTable_check_column:wtpWifiPositionFilter",
+				   "varbind validation failed (eg bad type or size)\n"));
+   }
+   else {
+	   rc = wtpWifiPositionFilter_check_value( rowreq_ctx, *((u_long *)var->val.string) );
+	   if((MFD_SUCCESS != rc) && (MFD_NOT_VALID_EVER != rc) &&
+		  (MFD_NOT_VALID_NOW != rc)) {
+		   snmp_log(LOG_ERR, "bad rc %d from wtpWifiPositionFilter_check_value\n", rc);
+		   rc = SNMP_ERR_GENERR;
+	   }
+   }
+	   break;
+
+/*****************************************************************/
+
+
+
+
+
+    default: /** We shouldn't get here */
+        rc = SNMP_ERR_GENERR;
+        snmp_log(LOG_ERR, "unknown column %d in _dot11WtpWifiPositionPublicInfoTable_check_column\n", column);
     }
 
     return rc;
@@ -1357,6 +1424,16 @@ _dot11WtpWifiPositionPublicInfoTable_undo_setup_column( dot11WtpWifiPositionPubl
         rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONSCANSWITCH_FLAG;
         rc = wtpWifiPositionScanSwitch_undo_setup(rowreq_ctx );
         break;
+/*wangchao add for wifi_locate*/
+    case COLUMN_WTPWIFIPOSITIONVERSION:
+        rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONVERSION_FLAG;
+        rc = wtpWifiPositionVersion_undo_setup(rowreq_ctx );
+        break;
+		
+    case COLUMN_WTPWIFIPOSITIONFILTER:
+        rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONFILTER_FLAG;
+        rc = wtpWifiPositionFilter_undo_setup(rowreq_ctx );
+        break;		
 
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpWifiPositionPublicInfoTable_undo_setup_column\n", column);
@@ -1552,6 +1629,16 @@ _dot11WtpWifiPositionPublicInfoTable_set_column( dot11WtpWifiPositionPublicInfoT
         rc = wtpWifiPositionScanSwitch_set(rowreq_ctx, *((u_long *)var->val.string) );
         break;
 
+	case COLUMN_WTPWIFIPOSITIONVERSION:
+		rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONVERSION_FLAG;
+		rc = wtpWifiPositionVersion_set(rowreq_ctx, *((u_long *)var->val.string) );
+		break;
+
+	case COLUMN_WTPWIFIPOSITIONFILTER:
+	 	rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONFILTER_FLAG;
+		rc = wtpWifiPositionFilter_set(rowreq_ctx, *((u_long *)var->val.string) );
+		break;
+
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpWifiPositionPublicInfoTable_set_column\n", column);
          rc = SNMP_ERR_GENERR;
@@ -1744,6 +1831,15 @@ _dot11WtpWifiPositionPublicInfoTable_undo_column( dot11WtpWifiPositionPublicInfo
     case COLUMN_WTPWIFIPOSITIONSCANSWITCH:
         rc = wtpWifiPositionScanSwitch_undo(rowreq_ctx);
         break;
+
+	case COLUMN_WTPWIFIPOSITIONVERSION:
+		rc = wtpWifiPositionVersion_undo(rowreq_ctx);
+		break;
+
+	case COLUMN_WTPWIFIPOSITIONFILTER:
+		rc = wtpWifiPositionFilter_undo(rowreq_ctx);
+		break;
+
 
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpWifiPositionPublicInfoTable_undo_column\n", column);
@@ -2105,6 +2201,8 @@ _dot11WtpWifiPositionPublicInfoTable_container_row_save(
         ( 12 ) + /* ASN_INTEGER wtpWifiPositionDataReportInterval */ \
         ( 12 ) + /* ASN_INTEGER wtpWifiPositionRssiThreshold */ \
         ( 12 ) + /* ASN_INTEGER wtpWifiPositionScanSwitch */ \
+        ( 12 ) + /*wifiPositionVerision  wagnchao add     */ \
+        ( 12 ) + /*wifiPositonFilter wagnchao add 		  */ \
         ( DOT11WTPWIFIPOSITIONPUBLICINFOTABLE_MAX_COL * 12 ) + /* column num prefix + : */ \
     2 /* LINE_TERM_CHAR + \n */ )
 
@@ -2336,6 +2434,16 @@ _dot11WtpWifiPositionPublicInfoTable_container_col_save(
         case COLUMN_WTPWIFIPOSITIONSCANSWITCH: /** INTEGER = ASN_INTEGER */
             buf += sprintf(buf,"%ld",rowreq_ctx->data.wtpWifiPositionScanSwitch);
         break;
+
+		case COLUMN_WTPWIFIPOSITIONVERSION:			
+            buf += sprintf(buf,"%ld",rowreq_ctx->data.wtpWifiPositionVersion);
+		break;
+
+		case COLUMN_WTPWIFIPOSITIONFILTER:
+			buf += sprintf(buf,"%ld",rowreq_ctx->data.wtpWifiPositionFilter);
+		break;
+			
+			
     
     default: /** We shouldn't get here */
         snmp_log(LOG_ERR, "unknown column %d in "
@@ -2429,6 +2537,20 @@ _dot11WtpWifiPositionPublicInfoTable_container_col_restore(
             len = sizeof(rowreq_ctx->data.wtpWifiPositionScanSwitch);
             buf = read_config_read_memory(ASN_INTEGER, buf,
                                           (char*)&rowreq_ctx->data.wtpWifiPositionScanSwitch,
+                                          &len);
+        break;
+
+    	case COLUMN_WTPWIFIPOSITIONVERSION: /** INTEGER = ASN_INTEGER */
+    		len = sizeof(rowreq_ctx->data.wtpWifiPositionVersion);
+    		buf = read_config_read_memory(ASN_INTEGER, buf,
+    									  (char*)&rowreq_ctx->data.wtpWifiPositionVersion,
+    									  &len);
+    	break;
+		
+        case COLUMN_WTPWIFIPOSITIONFILTER: /** INTEGER = ASN_INTEGER */
+            len = sizeof(rowreq_ctx->data.wtpWifiPositionFilter);
+            buf = read_config_read_memory(ASN_INTEGER, buf,
+                                          (char*)&rowreq_ctx->data.wtpWifiPositionFilter,
                                           &len);
         break;
     

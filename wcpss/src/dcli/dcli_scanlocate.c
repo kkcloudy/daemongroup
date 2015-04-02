@@ -403,7 +403,7 @@ DEFUN(create_scanlocate_report_cmd_func,
 
 DEFUN(create_scanlocate_wifi_specail_cmd_func,
 		create_scanlocate_wifi_specail_cmd,
-		"add service wifi INDEX scan-special scan-type <0-2> rssi <0-95> [2.4G/5.8G]",
+		"add service wifi INDEX scan-special scan-type <0-2> rssi <0-95> version-num NUM result-filter <0-1> [2.4G/5.8G]",
 		"add service\n"
 		"scan-locate service\n"
 		"wifi service\n"
@@ -412,6 +412,8 @@ DEFUN(create_scanlocate_wifi_specail_cmd_func,
 		"scan type\n"
 		"SCAN-TYPE: 0:all 1:assocation 2: no-assocation\n"
 		"rssi\n"
+		"version-num: default 0\n"
+		"result-filter: 0-1  0: close  1:open \n"
 		"RSSI like: 20\n")
 {
 	unsigned int ret = 0;
@@ -419,6 +421,8 @@ DEFUN(create_scanlocate_wifi_specail_cmd_func,
 	unsigned int id = 0;
 	unsigned int scan_type = 0;
 	unsigned int rssi = 0;
+	unsigned int version_num = 0;
+	unsigned int result_filter = 0;
 	unsigned char channel_flag = 0;
 	int localid = 0;
 	int slot_id = HostSlotId;
@@ -452,13 +456,27 @@ DEFUN(create_scanlocate_wifi_specail_cmd_func,
 		return CMD_SUCCESS;
 	}
 
-	if(argc == 4)
+	ret = parse_int_ID((char *)argv[3], &version_num);
+	if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty, "%% Illegal version-num\n");
+		return CMD_SUCCESS;
+	}
+
+	ret = parse_int_ID((char *)argv[4], &result_filter);
+	if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty, "%% Illegal result-filter\n");
+		return CMD_SUCCESS;
+	}
+
+	if(argc == 6)
 	{	
-		if (!strncmp("2.4G", argv[3], strlen(argv[3])))
+		if (!strncmp("2.4G", argv[5], strlen(argv[5])))
 		{
 			channel_flag = WIFI_LOCATE_2_4G;
 		}
-		else if (!strncmp("5.8G", argv[3], strlen(argv[3])))
+		else if (!strncmp("5.8G", argv[5], strlen(argv[5])))
 		{
 			channel_flag = WIFI_LOCATE_5_8G;
 		}
@@ -484,6 +502,8 @@ DEFUN(create_scanlocate_wifi_specail_cmd_func,
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ret  = wid_add_scanlocate_wifi_special_config(localid, index, id,(unsigned char)scan_type, 
 											(unsigned char)rssi,
+											(unsigned char)version_num,
+	                                        (unsigned char) result_filter,
 											channel_flag,
 											dcli_dbus_connection);
 
@@ -820,7 +840,7 @@ DEFUN(modify_scanlocate_general_config_cmd_func,
 
 DEFUN(modify_scanlocate_wifi_specal_config_cmd_func,
 		modify_scanlocate_wifi_specal_config_cmd,
-		"modify service wifi INDEX scan-special (rssi|scan-type) PARAMTER (2.4G|5.8G) [SNMP-FLAG] [WTP_MAC]",
+		"modify service wifi INDEX scan-special (rssi|scan-type|version-num|result-filter) PARAMTER (2.4G|5.8G) [SNMP-FLAG] [WTP_MAC]",
 		"delete service\n"
 		"scan-locate service\n"
 		"wifi service\n"
@@ -828,6 +848,8 @@ DEFUN(modify_scanlocate_wifi_specal_config_cmd_func,
 		"special scan config\n"
 		"scan type\n"
 		"rssi\n"
+		"version-num: default 0\n"
+		"result-filter: 0-1  0: close  1:open\n"
 		"PARAMTER\n")
 {
 	unsigned int ret = 0;
@@ -838,6 +860,8 @@ DEFUN(modify_scanlocate_wifi_specal_config_cmd_func,
 	unsigned int rssi = 0;
 	unsigned int snmp_flag = 0;
 	unsigned char channel_flag = 0;
+	unsigned int version_num = 0;
+	unsigned int result_filter = 0;
 	int localid = 0;
 	int slot_id = HostSlotId;
 	
@@ -873,6 +897,27 @@ DEFUN(modify_scanlocate_wifi_specal_config_cmd_func,
 		if (WID_DBUS_SUCCESS != ret)
 		{
 			vty_out(vty, "%% Illegal scan type\n");
+			return CMD_SUCCESS;
+		}
+	}
+	else if (!strncmp("version-num", argv[1], strlen(argv[1])))
+	{
+		modify_type = 3;
+		ret = parse_int_ID((char *)argv[2], &version_num);
+		if (WID_DBUS_SUCCESS != ret)
+		{
+			vty_out(vty, "%% Illegal version-num\n");
+			return CMD_SUCCESS;
+		}
+
+	}
+	else if (!strncmp("result-filter", argv[1], strlen(argv[1])))
+	{
+		modify_type = 4;
+		ret = parse_int_ID((char *)argv[2], &result_filter);
+		if (WID_DBUS_SUCCESS != ret)
+		{
+			vty_out(vty, "%% Illegal result-filter\n");
 			return CMD_SUCCESS;
 		}
 	}
@@ -938,6 +983,8 @@ DEFUN(modify_scanlocate_wifi_specal_config_cmd_func,
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ret = wid_modify_scanlocate_wifi_special_config(localid, index,  id, modify_type, 
 											(unsigned char)rssi, 
+											(unsigned char)version_num,
+											(unsigned char)result_filter,
 											(unsigned char)scan_type, 
 											wtp_mac.macaddr,
 											(unsigned char)snmp_flag,
@@ -1117,7 +1164,7 @@ DEFUN(set_radiolist_bind_mac_filter_group_cmd_func,
 /*for debug wifi-locate*/
 DEFUN(set_wtp_wifi_locate_general_config_cmd_func,
 		set_wtp_wifi_locate_general_config_cmd,
-		"set wifi-locate wtp MAC (enable|disable) type <0-2> report <1000-20000>  rssi RSSI serverip IP port PORT channel-scan TIME interval TIME (2.4G|5.8G) channel CHANNEL ",
+		"set wifi-locate wtp MAC (enable|disable) type <0-2> report <1000-20000>  rssi RSSI serverip IP port PORT channel-scan TIME interval TIME version-num NUM result-filter <0-1> (2.4G|5.8G) channel CHANNEL ",
 		WTP_SET
 		"wifi-locate\n"
 		WTP_WTP
@@ -1138,6 +1185,8 @@ DEFUN(set_wtp_wifi_locate_general_config_cmd_func,
 		"channel scan dwell time\n"
 		"channel scan interval time\n"
 		"channel scan interval time\n"
+		"version-num: default: 0\n"
+		"result-filter: 0-1  0: close  1:open \n"
 		"channel list\n"
 		"channel list like:1-5,6\n"
 		)
@@ -1158,6 +1207,8 @@ DEFUN(set_wtp_wifi_locate_general_config_cmd_func,
 	unsigned int channel_scan_interval = 0;
 	unsigned long long channel = 0;
 	unsigned char channel_flag = 0;   
+	unsigned int version_num = 0;
+	unsigned int result_filter = 0;
 	int localid = 0;
 	int slot_id = HostSlotId;
 	
@@ -1228,20 +1279,34 @@ DEFUN(set_wtp_wifi_locate_general_config_cmd_func,
 		return CMD_SUCCESS;
 	}
 
-	if (!strncmp("2.4G", argv[9], strlen(argv[9])))
+	ret = parse_int_ID((char *)argv[9], &version_num);
+	if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty, "%% Illegal version-num\n");
+		return CMD_SUCCESS;
+	}
+
+	ret = parse_int_ID((char *)argv[10], &result_filter);
+	if (WID_DBUS_SUCCESS != ret)
+	{
+		vty_out(vty, "%% Illegal result-filter\n");
+		return CMD_SUCCESS;
+	}
+
+	if (!strncmp("2.4G", argv[11], strlen(argv[11])))
 	{
 		channel_flag = WIFI_LOCATE_2_4G;
-		ret = change_channel_to_bit_map((unsigned char *)argv[10],strlen(argv[10]),&channel);
+		ret = change_channel_to_bit_map((unsigned char *)argv[12],strlen(argv[12]),&channel);
 		if (WID_DBUS_SUCCESS != ret)
 		{
 			vty_out(vty, "%% illegal channel list (1-13)\n");
 			return CMD_SUCCESS;
 		}
 	}
-	else if (!strncmp("5.8G", argv[9], strlen(argv[9])))
+	else if (!strncmp("5.8G", argv[11], strlen(argv[11])))
 	{
 		channel_flag = WIFI_LOCATE_5_8G;
-		ret = change_channel_to_bit_map_5_8G((unsigned char *)argv[10],strlen(argv[10]),&channel);
+		ret = change_channel_to_bit_map_5_8G((unsigned char *)argv[12],strlen(argv[12]),&channel);
 		if (WID_DBUS_SUCCESS != ret)
 		{
 			vty_out(vty, "%% illegal channel list (1-13)\n");
@@ -1269,8 +1334,8 @@ DEFUN(set_wtp_wifi_locate_general_config_cmd_func,
 	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
 	ret = snmp_wifi_locate_set_public_config(localid, index, isenable, wtp_mac.macaddr, (unsigned short)report_interval, (unsigned char)scan_type, 
 										channel, (unsigned short)channel_scan_interval,
-									 (unsigned short)channel_scan_time, (unsigned char)rssi, server_ip,
-									 (unsigned short)server_port ,channel_flag, dcli_dbus_connection);
+									 (unsigned short)channel_scan_time, (unsigned char)rssi,(unsigned short)server_port ,channel_flag,(unsigned char)version_num,
+									  server_ip,(unsigned char)result_filter, dcli_dbus_connection);
 	if(WID_DBUS_SUCCESS == ret)
 	{
 		vty_out(vty, "set wifi-locate enable successfully\n");
@@ -1345,12 +1410,14 @@ DEFUN(show_wtp_wifi_locate_public_onfig_cmd_func,
 		vty_out(vty,"CSI: CHANNEL SCAN INTERVAL (ms)\n");
 		vty_out(vty,"CST: CHANNEL SCAN TIME (ms)\n");
 		vty_out(vty,"RI:  REPORT INTERVAL (ms)\n");
+		vty_out(vty,"VER:  VERSION\n");
+		vty_out(vty,"FIL:  FILTER RESULT\n");
 		vty_out(vty,"TYPE:\n");
 		vty_out(vty,"     ASS: scan associated station\n");
 		vty_out(vty,"     NON: scan non-associated station \n");
 		vty_out(vty,"     ALL: scan ASS and NON\n");
 		vty_out(vty,"=======================================================================\n");
-		vty_out(vty, "%-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s\n",
+		vty_out(vty, "%-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s\n",
 				strlen("XX:XX:XX:XX:XX:XX"), "WTPMAC",
 				strlen("DISABLE"), "STATE",
 				strlen("CSI"), "CSI",
@@ -1359,10 +1426,12 @@ DEFUN(show_wtp_wifi_locate_public_onfig_cmd_func,
 				strlen("RSSI"), "RSSI",
 				strlen("TYPE"), "TYPE",
 				strlen("XXX.XXX.XXX.XXX"), "SERVER-IP",
-				strlen("PORT"), "PORT"
+				strlen("PORT"), "PORT",
+				strlen("VER"), "VER",
+				strlen("FIL"), "FIL"
 				);
 
-		vty_out(vty, MACSTR" %-*s %-*d %-*d %-*d %-*d %-*s %-*s %-*d \n",
+		vty_out(vty, MACSTR" %-*s %-*d %-*d %-*d %-*d %-*s %-*s %-*d %-*d %-*d\n",
 			MAC2STR(wtp_mac.macaddr),
 			strlen("DISABLE"), (public_config.state ==0)?"disable":"enable",
 			strlen("CSI"),  public_config.channel_scan_interval,
@@ -1371,7 +1440,9 @@ DEFUN(show_wtp_wifi_locate_public_onfig_cmd_func,
 			strlen("RSSI"), public_config.rssi,
 			strlen("TYPE"), (public_config.scan_type==0)?"ALL":((public_config.scan_type==1)?"ASS":"NON"),
 			strlen("XXX.XXX.XXX.XXX"), dcli_u32ip2str(public_config.server_ip),
-			strlen("PORT"), public_config.server_port
+			strlen("PORT"), public_config.server_port,
+			strlen("VER"), public_config.version_num,
+			strlen("FIL"), public_config.result_filter
 			);
 		
 		switch(channel_flag)
@@ -1466,12 +1537,14 @@ DEFUN(show_wtp_wifi_locate_public_onfig_cmd_all_func,
 		vty_out(vty,"CSI: CHANNEL SCAN INTERVAL (ms)\n");
 		vty_out(vty,"CST: CHANNEL SCAN TIME (ms)\n");
 		vty_out(vty,"RI:  REPORT INTERVAL (ms)\n");
+		vty_out(vty,"VER: VERSION\n");
+		vty_out(vty,"FIL:  FILTER RESULT\n");
 		vty_out(vty,"TYPE:\n");
 		vty_out(vty,"     ASS: scan associated station\n");
 		vty_out(vty,"     NON: scan non-associated station \n");
 		vty_out(vty,"     ALL: scan ASS and NON\n");
 		vty_out(vty,"=============================================================================\n");
-		vty_out(vty, "%-*s  %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s\n",
+		vty_out(vty, "%-*s  %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s %-*s\n",
 				strlen("WTPID"), "WTPID",
 				strlen("XX:XX:XX:XX:XX:XX"), "WTPMAC",
 				strlen("DISABLE"), "STATE",
@@ -1481,12 +1554,14 @@ DEFUN(show_wtp_wifi_locate_public_onfig_cmd_all_func,
 				strlen("RSSI"), "RSSI",
 				strlen("TYPE"), "TYPE",
 				strlen("XXX.XXX.XXX.XXX"), "SERVER-IP",
-				strlen("PORT"), "PORT"
+				strlen("PORT"), "PORT",
+				strlen("VER"), "VER",
+				strlen("FIL"), "FIL"
 				);
 
 		for(i=0; i<wtp_num; i++)
 		{
-			vty_out(vty, "%-*d  "MACSTR" %-*s %-*d %-*d %-*d %-*d %-*s %-*s %-*d \n",
+			vty_out(vty, "%-*d  "MACSTR" %-*s %-*d %-*d %-*d %-*d %-*s %-*s %-*d %-*d %-*d\n",
 			strlen("WTPID"), public_config[i].wtpid,
 			MAC2STR(public_config[i].wtp_mac),
 			strlen("DISABLE"), (public_config[i].state ==0)?"disable":"enable",
@@ -1496,7 +1571,9 @@ DEFUN(show_wtp_wifi_locate_public_onfig_cmd_all_func,
 			strlen("RSSI"), public_config[i].rssi,
 			strlen("TYPE"), (public_config[i].scan_type==0)?"ALL":((public_config[i].scan_type==1)?"ASS":"NON"),
 			strlen("XXX.XXX.XXX.XXX"), dcli_u32ip2str(public_config[i].server_ip),
-			strlen("PORT"), public_config[i].server_port
+			strlen("PORT"), public_config[i].server_port,
+			strlen("VER"), public_config[i].version_num,
+			strlen("FIL"), public_config[i].result_filter
 			);
 			switch(channel_flag)
 			{
@@ -1756,6 +1833,8 @@ DEFUN(show_wifi_config_cmd_func,
 		vty_out(vty, "index: %d\n", public_config.groupid);
 		vty_out(vty, "scan_type: %d\n", public_config.scan_type);
 		vty_out(vty, "rssi: %d\n", public_config.rssi);
+		vty_out(vty, "version: %d\n", public_config.version_num);
+		vty_out(vty, "filter: %d\n", public_config.result_filter);
 		vty_out(vty, "2.4G channel: ");
 		for(i=0; i<MAX_CHANNEL_2_4G; i++)
 		{
@@ -1883,6 +1962,8 @@ DEFUN(show_wifi_config_all_cmd_func,
 			vty_out(vty, "channel_scan_time: %d\n", public_config[i].channel_scan_time);
 			vty_out(vty, "report_interval: %d\n", public_config[i].report_interval);
 			vty_out(vty, "rssi: %d\n", public_config[i].rssi);
+			vty_out(vty, "version: %d\n", public_config[i].version_num);
+			vty_out(vty, "filter: %d\n", public_config[i].result_filter);
 			vty_out(vty, "scan_type: %d\n", public_config[i].scan_type);
 			vty_out(vty, "server_ip: %s\n", dcli_u32ip2str(public_config[i].server_ip));
 			vty_out(vty, "server_port: %d\n", public_config[i].server_port);
@@ -1966,6 +2047,8 @@ DEFUN(show_wifi_config_default_5_8G_cmd_func,
 		vty_out(vty, "index: %d\n", public_config.groupid);
 		vty_out(vty, "scan_type: %d\n", public_config.scan_type);
 		vty_out(vty, "rssi: %d\n", public_config.rssi);
+		vty_out(vty, "version: %d\n", public_config.version_num);
+		vty_out(vty, "filter: %d\n", public_config.result_filter);
 		vty_out(vty, "5.8G channel: ");
 		for(i=16; i<64; i++)
 		{

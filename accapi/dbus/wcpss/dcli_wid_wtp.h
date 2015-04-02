@@ -1368,6 +1368,8 @@ struct dcli_wifi_locate_public_config    /*WIFI-LOCATE*/
 	unsigned short channel_scan_interval;
 	unsigned short channel_scan_time;
 	unsigned char rssi;
+	unsigned char version_num;
+	unsigned char result_filter;
 	unsigned int server_ip;
 	unsigned short server_port;
 	unsigned char wtp_mac[MAC_LEN];

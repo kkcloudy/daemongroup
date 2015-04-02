@@ -324,6 +324,8 @@ CWBool CWAssembleWifiLocatePublicConfig
 	unsigned char state,
 	unsigned char scan_type,
 	unsigned char rssi,
+	unsigned char result_filter,
+	unsigned int version_num,
 	unsigned short report_interval,
 	unsigned short channel_scan_interval,
 	unsigned short	channel_scan_time,

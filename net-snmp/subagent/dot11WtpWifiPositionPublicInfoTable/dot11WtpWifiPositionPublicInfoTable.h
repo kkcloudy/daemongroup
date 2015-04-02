@@ -129,6 +129,10 @@ typedef struct dot11WtpWifiPositionPublicInfoTable_data_s {
          * wtpWifiPositionScanSwitch(10)/INTEGER/ASN_INTEGER/long(u_long)//l/A/W/E/r/d/h
          */
    u_long   wtpWifiPositionScanSwitch;
+
+   u_long 	wtpWifiPositionVersion;
+
+   u_long 	wtpWifiPositionFilter;
     
 } dot11WtpWifiPositionPublicInfoTable_data;
 

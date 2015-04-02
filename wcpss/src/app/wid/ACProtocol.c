@@ -4593,6 +4593,8 @@ CWBool CWAssembleWifiLocatePublicConfig
 	unsigned char state,
 	unsigned char scan_type,
 	unsigned char rssi,
+	unsigned char result_filter,
+	unsigned int version_num,
 	unsigned short report_interval,
 	unsigned short channel_scan_interval,
 	unsigned short	channel_scan_time,
@@ -4610,7 +4612,7 @@ CWBool CWAssembleWifiLocatePublicConfig
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 |f|                        vendor_id = 31656                        |
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-| element_id = 33                |     length                       |
+| element_id = 51                |     length                       |
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
       Type = 0      |     length = 1        |    func_type         |    type = 1     |  
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -4644,11 +4646,16 @@ scan_interval   |      type = 3       |      Length = 1     |   listen_time     
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
      Type = 11     |     length = 1       |               report_interval            |
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     Type = 12     |     length = 1       |              rssi      |
-+++++++++++++++++++++++++++++++++++++++
+     Type = 12     |     length = 1       |              rssi      |type =14         |
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   Length = 1      |   version num      |    type = 15       |   length = 1         |
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  result_filter      |
++++++++++++++
+
 */
-	short int elementid = 33; 
-	short int length = 70;
+	short int elementid = 51; 
+	short int length = 70+6;
 	unsigned char ip[MAX_IP_STRLEN] = {0};  
 	unsigned char *ipstr = ip;
 
@@ -4695,8 +4702,8 @@ scan_interval   |      type = 3       |      Length = 1     |   listen_time     
 	/*type 3 sum_length: 13*/
 	CWProtocolStore8(msgPtr, 3); /*type 3*/ 
 	CWProtocolStore8(msgPtr, 2); /*type 3 length = 2*/
-	CWProtocolStore16(msgPtr, 53); /*type 3 length =53 */
-	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 3 length 53 \n", __func__);
+	CWProtocolStore16(msgPtr, 59); /*type 3 length =59 */
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 3 length 59 \n", __func__);
 
 	wid_syslog_debug_debug(WID_DEFAULT,"%s: ***scanning and positioning message body:wifi-locate***/\n", __func__);
 	/*scanning and positioning message body:wifi-locate*/
@@ -4790,6 +4797,18 @@ scan_interval   |      type = 3       |      Length = 1     |   listen_time     
 	CWProtocolStore8(msgPtr, 1); /*type 11 length =1 */
 	CWProtocolStore8(msgPtr, rssi); /*rssi*/
 	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 12 length 1 rssi %d\n", __func__, rssi);
+
+	/*type 14 length = 3 sum_length: 56*/  
+	CWProtocolStore8(msgPtr, 14); /*type 14*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 14 length =1 */
+	CWProtocolStore8(msgPtr, (unsigned char)version_num); /*version_num*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 14 length 1 version_num %d\n", __func__, version_num);
+
+	/*type 15 length = 3 sum_length: 59*/  
+	CWProtocolStore8(msgPtr, 15); /*type 15*/ 
+	CWProtocolStore8(msgPtr, 1); /*type 15 length =1 */
+	CWProtocolStore8(msgPtr, result_filter); /*result_filter*/
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: type 15 length 1 result_filter %d\n", __func__, result_filter);
 
 	return CWAssembleMsgElemVendor(msgPtr, 
 		                 CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);

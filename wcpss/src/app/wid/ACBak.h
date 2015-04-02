@@ -79,6 +79,8 @@ typedef struct {
 	unsigned short channel_scan_interval;
 	unsigned short channel_scan_dwell;
 	unsigned char rssi;
+	unsigned char version_num;
+	unsigned char result_filter;
 	unsigned int server_ip;
 	unsigned short server_port;
 	unsigned int radio_count;
@@ -96,6 +98,8 @@ typedef struct {
 	unsigned short channel_scan_interval_5_8G;
 	unsigned short channel_scan_dwell_5_8G;
 	unsigned char rssi_5_8G;
+	unsigned char version_num_5_8G;
+	unsigned char result_filter_5_8G;
 	unsigned int server_ip_5_8G;
 	unsigned short server_port_5_8G;
 	/*for wifi-locate-0 use end*/

@@ -826,6 +826,9 @@ void bak_add_del_wifilocate
 			msg.Bu.WIFILOCATE.channel_scan_interval = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval;
 			msg.Bu.WIFILOCATE.radio_count = WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count;
 
+			msg.Bu.WIFILOCATE.version_num = WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num;
+			msg.Bu.WIFILOCATE.result_filter = WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter;
+
 			msg.Bu.WIFILOCATE.scan_type_5_8G = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type_5_8G;
 			msg.Bu.WIFILOCATE.server_ip_5_8G= WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G;
 			msg.Bu.WIFILOCATE.server_port_5_8G= WIFI_LOCATE_CONFIG_GROUP[groupid]->server_port_5_8G;
@@ -835,6 +838,9 @@ void bak_add_del_wifilocate
 			msg.Bu.WIFILOCATE.channel_5_8G= WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_5_8G;
 			msg.Bu.WIFILOCATE.channel_scan_dwell_5_8G= WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell_5_8G;
 			msg.Bu.WIFILOCATE.channel_scan_interval_5_8G= WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval_5_8G;
+
+			msg.Bu.WIFILOCATE.version_num_5_8G = WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G;
+			msg.Bu.WIFILOCATE.result_filter_5_8G = WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G;
 			
 
 			if (groupid != 0)
@@ -1408,6 +1414,9 @@ void B_WIFILOCATE_ADD_OP(B_Msg *msg)
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell = msg->Bu.WIFILOCATE.channel_scan_dwell;
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval = msg->Bu.WIFILOCATE.channel_scan_interval;
 
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num = msg->Bu.WIFILOCATE.version_num;
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter = msg->Bu.WIFILOCATE.result_filter;
+
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type_5_8G= msg->Bu.WIFILOCATE.scan_type_5_8G;
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G= msg->Bu.WIFILOCATE.server_ip_5_8G;
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->server_port_5_8G= msg->Bu.WIFILOCATE.server_port_5_8G;
@@ -1417,6 +1426,9 @@ void B_WIFILOCATE_ADD_OP(B_Msg *msg)
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_5_8G= msg->Bu.WIFILOCATE.channel_5_8G;
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell_5_8G= msg->Bu.WIFILOCATE.channel_scan_dwell_5_8G;
 	WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval_5_8G= msg->Bu.WIFILOCATE.channel_scan_interval_5_8G;
+
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G= msg->Bu.WIFILOCATE.version_num_5_8G;
+	WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G= msg->Bu.WIFILOCATE.result_filter_5_8G;
 	//WIFI_LOCATE_CONFIG_GROUP[groupid]->radio_count = msg->Bu.WIFILOCATE.radio_count;
 
 	if (groupid != WIFI_LOCATE_DEFAULT_CONFIG)

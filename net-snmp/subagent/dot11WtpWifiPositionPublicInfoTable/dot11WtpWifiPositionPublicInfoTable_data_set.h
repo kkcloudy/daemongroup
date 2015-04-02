@@ -84,6 +84,18 @@ int wtpWifiPositionScanSwitch_undo_setup( dot11WtpWifiPositionPublicInfoTable_ro
 int wtpWifiPositionScanSwitch_set( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionScanSwitch_val );
 int wtpWifiPositionScanSwitch_undo( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx );
 
+/**wangchao add for wifi_locate*/
+int wtpWifiPositionVersion_check_value( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionVersion_val);
+int wtpWifiPositionVersion_undo_setup( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx );
+int wtpWifiPositionVersion_set( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionVersion_val );
+int wtpWifiPositionVersion_undo( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx );
+
+int wtpWifiPositionFilter_check_value( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionFilter_val);
+int wtpWifiPositionFilter_undo_setup( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx );
+int wtpWifiPositionFilter_set( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionFilter_val );
+int wtpWifiPositionFilter_undo( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx );
+
+
 
 int dot11WtpWifiPositionPublicInfoTable_check_dependencies(dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *ctx);
 

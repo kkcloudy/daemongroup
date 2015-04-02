@@ -388,7 +388,10 @@ dot11WtpWifiPositionPublicInfoTable_container_load(netsnmp_container *container)
         		     */
         		    /** no mapping */
         		    rowreq_ctx->data.wtpWifiPositionScanSwitch = public_config[i].state;
-        		    
+
+					rowreq_ctx->data.wtpWifiPositionVersion = public_config[i].version_num;
+
+					rowreq_ctx->data.wtpWifiPositionFilter = public_config[i].result_filter;
         		        
         		        /*
         		         * insert into table container

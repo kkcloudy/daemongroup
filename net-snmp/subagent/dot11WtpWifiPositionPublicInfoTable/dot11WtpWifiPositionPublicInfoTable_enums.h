@@ -63,8 +63,14 @@ extern "C" {
 
 #endif /* WTPWIFIPOSITIONSCANSWITCH_ENUMS */
 
+/*wangcho add for wifi_locate*/
+#ifndef WTPWIFIPOSITIONFILTER_ENUMS
+#define WTPWIFIPOSITIONFILTER_ENUMS
 
+#define WTPWIFIPOSITIONFILTER_OFF  0 
+#define WTPWIFIPOSITIONFILTER_ON  1 
 
+#endif 
 
 #ifdef __cplusplus
 }

@@ -6736,7 +6736,9 @@ Dot11WtpWifiPositionPublicInfoEntry ::=SEQUENCE{
         wtpWifiPositionScanType			INTEGER,
         wtpWifiPositionDataReportInterval	INTEGER,
         wtpWifiPositionRssiThreshold		INTEGER,
-        wtpWifiPositionScanSwitch		INTEGER
+        wtpWifiPositionScanSwitch		INTEGER,
+        wtpWifiPositionVersion		INTEGER,
+        wtpWifiPositionFilter		INTEGER	
 } 
 WifiPositionFrequency			OBJECT-TYPE
 					SYNTAX     INTEGER(0..1)
@@ -6824,6 +6826,25 @@ wtpWifiPositionScanSwitch		OBJECT-TYPE
 					DESCRIPTION
 						"wtp wifi position scan switch."
 					::= { dot11WtpWifiPositionPublicInfoEntry 10 }	
+					
+wtpWifiPositionVersion		OBJECT-TYPE
+					SYNTAX     INTEGER(0..1000)
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position software version."
+					::= { dot11WtpWifiPositionPublicInfoEntry 11 }	
+					
+wtpWifiPositionFilter		OBJECT-TYPE
+					SYNTAX     INTEGER{
+							  						off(0),
+														on(1)
+							  						}
+					MAX-ACCESS read-write
+					STATUS     current
+					DESCRIPTION
+						"wtp wifi position filter switch."
+					::= { dot11WtpWifiPositionPublicInfoEntry 12 }	
 					
 --**********************************************************************************************
 dot11WifiPositionGlobalInfoTable OBJECT-TYPE

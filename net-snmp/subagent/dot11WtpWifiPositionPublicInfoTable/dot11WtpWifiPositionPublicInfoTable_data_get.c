@@ -584,5 +584,47 @@ wtpWifiPositionScanSwitch_get( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *r
 } /* wtpWifiPositionScanSwitch_get */
 
 
+int
+wtpWifiPositionVersion_get( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpWifiPositionVersion_val_ptr )
+{
+    /** we should have a non-NULL pointer */
+    netsnmp_assert( NULL != wtpWifiPositionVersion_val_ptr );
+ 
+ 
+ 	DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionVersion_get","called\n"));
+ 
+ 	netsnmp_assert(NULL != rowreq_ctx);
+ 
+ /*
+  * TODO:231:o: |-> Extract the current value of the wtpWifiPositionScanSwitch data.
+  * copy (* wtpWifiPositionScanSwitch_val_ptr ) from rowreq_ctx->data
+  */
+ 	(* wtpWifiPositionVersion_val_ptr ) = rowreq_ctx->data.wtpWifiPositionVersion;
+ 
+ 	return MFD_SUCCESS;
+}
+
+
+int
+wtpWifiPositionFilter_get( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpWifiPositionFilter_val_ptr )
+{
+    /** we should have a non-NULL pointer */
+    netsnmp_assert( NULL != wtpWifiPositionFilter_val_ptr );
+ 
+ 
+ 	DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionFilter_get","called\n"));
+ 
+ 	netsnmp_assert(NULL != rowreq_ctx);
+ 
+ /*
+  * TODO:231:o: |-> Extract the current value of the wtpWifiPositionScanSwitch data.
+  * copy (* wtpWifiPositionScanSwitch_val_ptr ) from rowreq_ctx->data
+  */
+ 	(* wtpWifiPositionFilter_val_ptr ) = rowreq_ctx->data.wtpWifiPositionFilter;
+ 
+ 	return MFD_SUCCESS;
+}
+
+
 
 /** @} */

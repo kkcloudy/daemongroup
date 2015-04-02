@@ -35927,8 +35927,11 @@ unsigned int compare_wifi_locate_paramter
 				&&(temp_wifi_locate_config.channel_scan_interval == WIFI_LOCATE_CONFIG_GROUP[i]->channel_scan_interval)
 				&&(temp_wifi_locate_config.channel_scan_dwell == WIFI_LOCATE_CONFIG_GROUP[i]->channel_scan_dwell)
 				&&(temp_wifi_locate_config.rssi == WIFI_LOCATE_CONFIG_GROUP[i]->rssi)
+				&&(temp_wifi_locate_config.version_num == WIFI_LOCATE_CONFIG_GROUP[i]->version_num)
+				&&(temp_wifi_locate_config.result_filter == WIFI_LOCATE_CONFIG_GROUP[i]->result_filter)
 				&&(temp_wifi_locate_config.server_ip == WIFI_LOCATE_CONFIG_GROUP[i]->server_ip)
 				&&(temp_wifi_locate_config.server_port == WIFI_LOCATE_CONFIG_GROUP[i]->server_port)
+				
 				&&(temp_wifi_locate_config.groupid != WIFI_LOCATE_CONFIG_GROUP[i]->groupid))
 			{
 				*groupid = i;
@@ -36010,6 +36013,8 @@ unsigned int wid_to_ap_wifi_locate_config
 	msg.mqinfo.u.WtpInfo.c1 = AC_RADIO[radioid]->scanlocate_group.wifi_locate.enable;
 	msg.mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type;
 	msg.mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi;
+	msg.mqinfo.u.WtpInfo.i2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num;
+	msg.mqinfo.u.WtpInfo.value4 = WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter;
 	msg.mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval;
 	msg.mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval;
 	msg.mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell;
@@ -36027,6 +36032,8 @@ unsigned int wid_to_ap_wifi_locate_config
 			channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_5_8G;
 			msg.mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type_5_8G;
 			msg.mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G;
+			msg.mqinfo.u.WtpInfo.i2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G;
+			msg.mqinfo.u.WtpInfo.value4 = WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G;
 			msg.mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval_5_8G;
 			msg.mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval_5_8G;
 			msg.mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell_5_8G;
@@ -36073,6 +36080,8 @@ unsigned int wid_to_ap_wifi_locate_config
 		elem->mqinfo.u.WtpInfo.c1 = AC_RADIO[radioid]->scanlocate_group.wifi_locate.enable;
 		elem->mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type;
 		elem->mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi;
+		elem->mqinfo.u.WtpInfo.i2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num;
+		elem->mqinfo.u.WtpInfo.value4 = WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter;
 		elem->mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval;
 		elem->mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval;
 		elem->mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell;
@@ -36090,6 +36099,8 @@ unsigned int wid_to_ap_wifi_locate_config
 				channel = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_5_8G;
 				elem->mqinfo.u.WtpInfo.c2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->scan_type_5_8G;
 				elem->mqinfo.u.WtpInfo.value1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G;
+				elem->mqinfo.u.WtpInfo.i2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G;
+				elem->mqinfo.u.WtpInfo.value4 = WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G;
 				elem->mqinfo.u.WtpInfo.s1 = WIFI_LOCATE_CONFIG_GROUP[groupid]->report_interval_5_8G;
 				elem->mqinfo.u.WtpInfo.s2 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_interval_5_8G;
 				elem->mqinfo.u.WtpInfo.s3 = WIFI_LOCATE_CONFIG_GROUP[groupid]->channel_scan_dwell_5_8G;
@@ -36113,13 +36124,15 @@ unsigned int wid_to_ap_wifi_locate_config
 	}
 	
 	ip_long2str(msg.mqinfo.u.WtpInfo.value2, &ipstr);
-	wid_syslog_debug_debug(WID_DEFAULT,"%s: msg wtpid %d radio %d state %d type %d rssi %d report %d scan_interval %d scan_time %d ip %s port %d channel %llu to message queue\n",
+	wid_syslog_debug_debug(WID_DEFAULT,"%s: msg wtpid %d radio %d state %d type %d rssi %d report %d scan_interval %d scan_time %d ip %s port %d  result_filter %d version_num %d channel %llu to message queue\n",
 			__func__,
 			wtpid,
 			radioid,
 			msg.mqinfo.u.WtpInfo.c1,
 			msg.mqinfo.u.WtpInfo.c2,
 			msg.mqinfo.u.WtpInfo.value1,
+			msg.mqinfo.u.WtpInfo.value4,
+			msg.mqinfo.u.WtpInfo.i2,
 			msg.mqinfo.u.WtpInfo.s1,
 			msg.mqinfo.u.WtpInfo.s2,
 			msg.mqinfo.u.WtpInfo.s3,

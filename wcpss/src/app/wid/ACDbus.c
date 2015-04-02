@@ -1851,10 +1851,12 @@ DBusMessage * wid_dbus_scanlocate_show_running_config_start(DBusConnection *conn
 									WIFI_GROUP[i]->report_interval);
 					cursor = showStr + totalLen;
 					
-					totalLen += sprintf(cursor," add service wifi %d scan-special scan-type %d rssi %d\n", 
+					totalLen += sprintf(cursor," add service wifi %d scan-special scan-type %d rssi %d version-num %d result-filter %d\n", 
 									WIFI_GROUP[i]->groupid,
 									WIFI_GROUP[i]->scan_type,
-									WIFI_GROUP[i]->rssi);
+									WIFI_GROUP[i]->rssi,
+									WIFI_GROUP[i]->version_num,
+									WIFI_GROUP[i]->result_filter);
 					cursor = showStr + totalLen;
 					
 				} 
@@ -1916,10 +1918,12 @@ DBusMessage * wid_dbus_scanlocate_show_running_config_start(DBusConnection *conn
 									WIFI_GROUP[i]->report_interval_5_8G);
 					cursor = showStr + totalLen;
 					
-					totalLen += sprintf(cursor," add service wifi %d scan-special scan-type %d rssi %d 5.8G\n", 
+					totalLen += sprintf(cursor," add service wifi %d scan-special scan-type %d rssi %d version-num %d result-filter %d 5.8G\n", 
 									WIFI_GROUP[i]->groupid,
 									WIFI_GROUP[i]->scan_type_5_8G,
-									WIFI_GROUP[i]->rssi_5_8G);
+									WIFI_GROUP[i]->rssi_5_8G,
+									WIFI_GROUP[i]->version_num_5_8G,
+									WIFI_GROUP[i]->result_filter_5_8G);
 					cursor = showStr + totalLen;
 
 				}
@@ -79944,6 +79948,8 @@ DBusMessage *wid_dbus_interface_add_scanlocate_wifi_special_config
 	
 	unsigned char scan_type = 0;
 	unsigned char rssi = 0;
+	unsigned char version_num = 0;
+	unsigned char result_filter = 0;
 	
 	radioList *iterator = NULL;
 	unsigned char channel_flag = 0;
@@ -79953,6 +79959,8 @@ DBusMessage *wid_dbus_interface_add_scanlocate_wifi_special_config
 						DBUS_TYPE_UINT32, &index,
 						DBUS_TYPE_BYTE, &scan_type,
 						DBUS_TYPE_BYTE, &rssi,
+						DBUS_TYPE_BYTE, &version_num,
+						DBUS_TYPE_BYTE,	&result_filter,
 						DBUS_TYPE_BYTE, &channel_flag,
 						DBUS_TYPE_INVALID)))
 	{	
@@ -79973,6 +79981,8 @@ DBusMessage *wid_dbus_interface_add_scanlocate_wifi_special_config
 		{
 			WIFI_LOCATE_CONFIG_GROUP[index]->scan_type = scan_type;
 			WIFI_LOCATE_CONFIG_GROUP[index]->rssi = rssi;
+			WIFI_LOCATE_CONFIG_GROUP[index]->version_num = version_num;
+			WIFI_LOCATE_CONFIG_GROUP[index]->result_filter = result_filter;
 			if (WIFI_LOCATE_CONFIG_GROUP[index]->radiolist != NULL)
 			{
 				iterator = WIFI_LOCATE_CONFIG_GROUP[index]->radiolist;
@@ -79993,6 +80003,8 @@ DBusMessage *wid_dbus_interface_add_scanlocate_wifi_special_config
 		{
 			WIFI_LOCATE_CONFIG_GROUP[index]->scan_type_5_8G = scan_type;
 			WIFI_LOCATE_CONFIG_GROUP[index]->rssi_5_8G = rssi;
+			WIFI_LOCATE_CONFIG_GROUP[index]->version_num_5_8G = version_num;
+			WIFI_LOCATE_CONFIG_GROUP[index]->result_filter_5_8G = result_filter;
 			if (WIFI_LOCATE_CONFIG_GROUP[index]->radiolist != NULL)
 			{
 				iterator = WIFI_LOCATE_CONFIG_GROUP[index]->radiolist;
@@ -80454,7 +80466,8 @@ DBusMessage *wid_dbus_interface_modify_scanlocate_wifi_special_config
 	unsigned char modify_type = 0;     //switch(modify_type)
 	unsigned char rssi = 0;			//case:
 	unsigned char scan_type = 0;		//case:
-	
+	unsigned char version_num = 0;    //case:
+	unsigned char result_filter = 0;     //case:
 	unsigned char snmp_flag = 0;
 	unsigned char wtp_mac[MAC_LEN] = {0};
 	
@@ -80470,8 +80483,10 @@ DBusMessage *wid_dbus_interface_modify_scanlocate_wifi_special_config
 	if (!(dbus_message_get_args (msg, &err,
 						DBUS_TYPE_UINT32, &index,
 						DBUS_TYPE_BYTE, &modify_type,
-						DBUS_TYPE_BYTE, &rssi,
 						DBUS_TYPE_BYTE, &scan_type,
+						DBUS_TYPE_BYTE, &rssi,
+						DBUS_TYPE_BYTE, &version_num,
+						DBUS_TYPE_BYTE, &result_filter,
 						DBUS_TYPE_BYTE, &wtp_mac[0],
 						DBUS_TYPE_BYTE, &wtp_mac[1],
 						DBUS_TYPE_BYTE, &wtp_mac[2],
@@ -80496,6 +80511,9 @@ DBusMessage *wid_dbus_interface_modify_scanlocate_wifi_special_config
 
 	wid_syslog_debug_debug(WID_DEFAULT, "%s rssi: %d\n", __func__, rssi);
 	wid_syslog_debug_debug(WID_DEFAULT, "%s scan_type: %d\n", __func__, scan_type);
+	
+	wid_syslog_debug_debug(WID_DEFAULT, "%s version_num: %d\n", __func__, version_num);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s result_filter: %d\n", __func__, result_filter);
 	
 	wid_syslog_debug_debug(WID_DEFAULT, "%s snmp_flag: %d\n", __func__, snmp_flag);
 	wid_syslog_debug_debug(WID_DEFAULT, "%s wtp "MACSTR"\n", __func__, MAC2STR(wtp_mac));
@@ -80572,8 +80590,11 @@ DBusMessage *wid_dbus_interface_modify_scanlocate_wifi_special_config
 						temp_wifi_locate_config.scan_type = WIFI_LOCATE_CONFIG_GROUP[index]->scan_type_5_8G;
 						temp_wifi_locate_config.channel_scan_interval = WIFI_LOCATE_CONFIG_GROUP[index]->channel_scan_interval_5_8G;
 						temp_wifi_locate_config.rssi = WIFI_LOCATE_CONFIG_GROUP[index]->rssi_5_8G;
+						temp_wifi_locate_config.version_num = WIFI_LOCATE_CONFIG_GROUP[index]->version_num_5_8G;
+						temp_wifi_locate_config.result_filter = WIFI_LOCATE_CONFIG_GROUP[index]->result_filter_5_8G;
 						temp_wifi_locate_config.server_ip = WIFI_LOCATE_CONFIG_GROUP[index]->server_ip_5_8G;
 						temp_wifi_locate_config.server_port = WIFI_LOCATE_CONFIG_GROUP[index]->server_port_5_8G;
+						
 
 					}
 					else
@@ -80597,6 +80618,22 @@ DBusMessage *wid_dbus_interface_modify_scanlocate_wifi_special_config
 							if(temp_wifi_locate_config.scan_type != scan_type)
 							{
 								temp_wifi_locate_config.scan_type = scan_type;
+								change_flag = 1;
+							}
+							break;
+							
+						case version_num_type:
+							if(temp_wifi_locate_config.version_num != version_num)
+							{
+								temp_wifi_locate_config.version_num = version_num;
+								change_flag = 1;
+							}
+							break;
+							
+						case result_filter_type:
+							if(temp_wifi_locate_config.result_filter != result_filter)
+							{
+								temp_wifi_locate_config.result_filter = result_filter;
 								change_flag = 1;
 							}
 							break;
@@ -80708,6 +80745,12 @@ DBusMessage *wid_dbus_interface_modify_scanlocate_wifi_special_config
 					case scan_type_type:
 						WIFI_LOCATE_CONFIG_GROUP[index]->scan_type = scan_type;
 						break;
+					case version_num_type:
+						WIFI_LOCATE_CONFIG_GROUP[index]->version_num = version_num;
+						break;
+					case result_filter_type:
+						WIFI_LOCATE_CONFIG_GROUP[index]->result_filter = result_filter;
+						break;
 					default:
 						wid_syslog_debug_debug(WID_DEFAULT,
 							"%s error modify_type %d\n", __func__, modify_type);
@@ -80766,6 +80809,8 @@ DBusMessage *wid_dbus_method_set_wifi_locate_public_config(DBusConnection *conn,
 	unsigned short channel_scan_interval = 0;
 	unsigned short channel_scan_dwell = 0;
 	unsigned char rssi = 0;
+	unsigned char version_num = 0;
+	unsigned char result_filter = 0;
 	unsigned int server_ip = 0;
 	unsigned short server_port = 0;
 	
@@ -80792,6 +80837,8 @@ DBusMessage *wid_dbus_method_set_wifi_locate_public_config(DBusConnection *conn,
 						DBUS_TYPE_UINT16,&channel_scan_interval,
 						DBUS_TYPE_UINT16,&channel_scan_dwell,
 						DBUS_TYPE_BYTE,&rssi,
+						DBUS_TYPE_BYTE,&version_num,
+						DBUS_TYPE_BYTE,&result_filter,
 						DBUS_TYPE_UINT32,&server_ip,
 						DBUS_TYPE_UINT16,&server_port,
 						DBUS_TYPE_BYTE,&channel_flag,
@@ -80816,6 +80863,8 @@ DBusMessage *wid_dbus_method_set_wifi_locate_public_config(DBusConnection *conn,
 	wid_syslog_debug_debug(WID_DEFAULT, "%s server_ip: %s\n", __func__, ipstr);
 	wid_syslog_debug_debug(WID_DEFAULT, "%s server_port: %d\n", __func__, server_port);
 	wid_syslog_debug_debug(WID_DEFAULT, "%s channel_flag: %d\n", __func__, channel_flag);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s version_num: %d\n", __func__, version_num);
+	wid_syslog_debug_debug(WID_DEFAULT, "%s result_filter: %d\n", __func__, result_filter);
 
 	if(report_interval < MIN_REPORT_INTERVAL
 		||report_interval> MAX_REPORT_INTERVAL)
@@ -80865,6 +80914,9 @@ DBusMessage *wid_dbus_method_set_wifi_locate_public_config(DBusConnection *conn,
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->rssi = rssi;
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->server_ip = server_ip;
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->server_port = server_port;	
+					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->version_num = version_num;
+					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->result_filter = result_filter;
+
 					break;
 				case WIFI_LOCATE_5_8G:
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->channel_5_8G = channel;
@@ -80875,6 +80927,8 @@ DBusMessage *wid_dbus_method_set_wifi_locate_public_config(DBusConnection *conn,
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->rssi_5_8G = rssi;
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->server_ip_5_8G = server_ip;
 					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->server_port_5_8G = server_port;	
+					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->version_num_5_8G = version_num;
+					WIFI_LOCATE_CONFIG_GROUP[WIFI_LOCATE_DEFAULT_CONFIG] ->result_filter_5_8G = result_filter;
 					break;
 				default:
 					wid_syslog_err("%s channel_flag: %d\n", __func__, channel_flag);
@@ -81224,6 +81278,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_wtp(DBusConnection *conn, D
 
 			dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
 					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G));
+					
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
+					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G));
+
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
+					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G));
 			
 			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, 
 					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G));
@@ -81251,6 +81311,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_wtp(DBusConnection *conn, D
 
 			dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
 					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi));
+					
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
+					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num));
+
+			dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
+					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter));
 			
 			dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, 
 					&(WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip));
@@ -81326,6 +81392,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_group(DBusConnection *conn,
 
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
 				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi));
+				
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT16, 
+				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num));
+
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT16, 
+				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter));
 		
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, 
 				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip));
@@ -81419,6 +81491,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_group_default_5_8G(DBusConn
 
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
 				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G));
+				
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
+				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G));
+
+		dbus_message_iter_append_basic(&iter, DBUS_TYPE_BYTE, 
+				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G));
 		
 		dbus_message_iter_append_basic(&iter, DBUS_TYPE_UINT32, 
 				&(WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G));
@@ -81521,6 +81599,8 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_group_all(DBusConnection *c
 										DBUS_TYPE_UINT16_AS_STRING	//channel_scan_interval
 										DBUS_TYPE_UINT16_AS_STRING	//channel_scan_dwell
 										DBUS_TYPE_BYTE_AS_STRING	//rssi
+										DBUS_TYPE_BYTE_AS_STRING	//version_num
+										DBUS_TYPE_BYTE_AS_STRING	//result_filter
 										DBUS_TYPE_UINT32_AS_STRING	//server_ip
 										DBUS_TYPE_UINT16_AS_STRING	//server_port
 										DBUS_TYPE_UINT32_AS_STRING	//radio_count
@@ -81564,6 +81644,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_group_all(DBusConnection *c
 
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
 						&(wifi_locate_group[i]->rssi));
+						
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+						&(wifi_locate_group[i]->version_num));
+
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+						&(wifi_locate_group[i]->result_filter));
 		
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, 
 						&(wifi_locate_group[i]->server_ip));
@@ -81621,6 +81707,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_group_all(DBusConnection *c
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT16,
 										&(zero_16));
 
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+										&(zero_8));
+										
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+										&(zero_8));
+				
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
 										&(zero_8));
 				
@@ -81810,8 +81902,11 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_all_wtp(DBusConnection *con
 										DBUS_TYPE_UINT16_AS_STRING	//channel_scan_interval
 										DBUS_TYPE_UINT16_AS_STRING	//channel_scan_dwell
 										DBUS_TYPE_BYTE_AS_STRING	//rssi
+										DBUS_TYPE_BYTE_AS_STRING	//version_num
+										DBUS_TYPE_BYTE_AS_STRING	//result_filter
 										DBUS_TYPE_UINT32_AS_STRING	//server_ip
 										DBUS_TYPE_UINT16_AS_STRING	//server_port
+									
 										DBUS_STRUCT_END_CHAR_AS_STRING,
 										&iter_array);
 
@@ -81873,6 +81968,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_all_wtp(DBusConnection *con
 
 					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
 							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi_5_8G));
+							
+					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num_5_8G));
+
+					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter_5_8G));
 					
 					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, 
 							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip_5_8G));
@@ -81900,6 +82001,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_all_wtp(DBusConnection *con
 
 					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
 							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->rssi));
+							
+					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->version_num));
+
+					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->result_filter));
 					
 					dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT32, 
 							&(WIFI_LOCATE_CONFIG_GROUP[groupid]->server_ip));
@@ -81925,6 +82032,12 @@ DBusMessage *wid_dbus_method_show_wifi_locate_config_all_wtp(DBusConnection *con
 
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_UINT16,
 										&(zero_16));
+
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+										&(zero_8));
+										
+				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
+										&(zero_8));
 
 				dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, 
 										&(zero_8));

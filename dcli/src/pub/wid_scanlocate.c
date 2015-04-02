@@ -528,6 +528,8 @@ unsigned int wid_add_scanlocate_wifi_special_config
 	unsigned int id,
 	unsigned char scan_type,
 	unsigned char rssi,
+	unsigned char version_num,
+	unsigned char result_filter,
 	unsigned char channel_flag,
 	DBusConnection *dcli_dbus_connection
 )
@@ -551,6 +553,8 @@ unsigned int wid_add_scanlocate_wifi_special_config
 						DBUS_TYPE_UINT32, &id,
 						DBUS_TYPE_BYTE, &scan_type,
 						DBUS_TYPE_BYTE, &rssi,
+						DBUS_TYPE_BYTE, &version_num,
+						DBUS_TYPE_BYTE, &result_filter,
 						DBUS_TYPE_BYTE, &channel_flag,
 						DBUS_TYPE_INVALID);
 
@@ -660,8 +664,11 @@ unsigned int wid_modify_scanlocate_wifi_special_config
 	unsigned int index, 
 	unsigned int id,
 	unsigned char modify_type,
+
 	unsigned char scan_type,
 	unsigned char rssi,
+	unsigned char version_num,
+	unsigned char result_filter,
 	unsigned char *wtp_mac,
 	unsigned char snmp_flag,
 	unsigned char channel_flag,
@@ -688,6 +695,9 @@ unsigned int wid_modify_scanlocate_wifi_special_config
 						DBUS_TYPE_BYTE, &modify_type,
 						DBUS_TYPE_BYTE, &scan_type,
 						DBUS_TYPE_BYTE, &rssi,
+						DBUS_TYPE_BYTE, &version_num,
+						DBUS_TYPE_BYTE, &result_filter,
+						
 						DBUS_TYPE_BYTE, &wtp_mac[0],
 						DBUS_TYPE_BYTE, &wtp_mac[1],
 						DBUS_TYPE_BYTE, &wtp_mac[2],
@@ -953,6 +963,12 @@ unsigned int wid_show_wifi_locate_config_group
 
 		dbus_message_iter_get_basic(&iter,&(public_config->rssi));
 		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter,&(public_config->version_num));
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter,&(public_config->result_filter));
+		dbus_message_iter_next(&iter);
 
 		dbus_message_iter_get_basic(&iter,&(public_config->server_ip));
 		dbus_message_iter_next(&iter);
@@ -1062,6 +1078,12 @@ unsigned int wid_show_wifi_locate_config_group_default_5_8G
 		dbus_message_iter_next(&iter);
 
 		dbus_message_iter_get_basic(&iter,&(public_config->rssi));
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter,&(public_config->version_num));
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter,&(public_config->result_filter));
 		dbus_message_iter_next(&iter);
 
 		dbus_message_iter_get_basic(&iter,&(public_config->server_ip));
@@ -1187,6 +1209,12 @@ unsigned int wid_show_wifi_locate_config_group_all
 			dbus_message_iter_next(&iter_struct);
 
 			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].rssi));
+			dbus_message_iter_next(&iter_struct);
+			
+			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].version_num));
+			dbus_message_iter_next(&iter_struct);
+			
+			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].result_filter));
 			dbus_message_iter_next(&iter_struct);
 
 			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].server_ip));
@@ -1439,9 +1467,12 @@ unsigned int snmp_wifi_locate_change_rssi
 	
 	unsigned int id= 0;
 	unsigned char scan_type = 0;
-
-	ret = wid_modify_scanlocate_wifi_special_config(localid, index, id, modify_type, rssi, scan_type, 
-											wtp_mac,snmp_flag,channel_flag, 
+	unsigned char version_num = 0;
+	unsigned char result_filter = 0;
+	
+	ret = wid_modify_scanlocate_wifi_special_config(localid,index, id, modify_type, scan_type,rssi,  
+											version_num, result_filter,
+											wtp_mac,snmp_flag, channel_flag,
 											dcli_dbus_connection);
 	return ret;
 }
@@ -1462,8 +1493,65 @@ unsigned int snmp_wifi_locate_change_scan_type
 	
 	unsigned int id= 0;
 	unsigned char rssi = 0;
+	unsigned char version_num = 0;
+	unsigned char result_filter = 0;
 
-	ret = wid_modify_scanlocate_wifi_special_config(localid, index, id, modify_type, rssi, scan_type, 
+	ret = wid_modify_scanlocate_wifi_special_config(localid,index, id, modify_type, scan_type, rssi, 
+											version_num, result_filter,
+											wtp_mac,snmp_flag, channel_flag,
+											dcli_dbus_connection);
+	return ret;
+}
+
+unsigned int snmp_wifi_locate_change_version_num
+(
+    int localid,
+	unsigned int index, 
+	unsigned char* wtp_mac,
+	unsigned char version_num,
+	unsigned char channel_flag,
+	DBusConnection *dcli_dbus_connection
+	
+)
+{
+	unsigned int ret = 0;
+	unsigned char modify_type = 3;
+	unsigned char snmp_flag = 1;
+	
+	unsigned int id= 0;
+	unsigned char scan_type = 0;
+	unsigned char rssi = 0;
+	unsigned char result_filter = 0;
+
+	ret = wid_modify_scanlocate_wifi_special_config(localid,index, id, modify_type, rssi, scan_type, 
+											version_num, result_filter,
+											wtp_mac,snmp_flag, channel_flag,
+											dcli_dbus_connection);
+	return ret;
+}
+
+unsigned int snmp_wifi_locate_change_result_filter
+(
+    int localid,
+	unsigned int index, 
+	unsigned char* wtp_mac,
+	unsigned char result_filter,
+	unsigned char channel_flag,
+	DBusConnection *dcli_dbus_connection
+	
+)
+{
+	unsigned int ret = 0;
+	unsigned char modify_type = 4;
+	unsigned char snmp_flag = 1;
+	
+	unsigned int id= 0;
+	unsigned char scan_type = 0;
+	unsigned char rssi = 0;
+	unsigned char version_num = 0;
+
+	ret = wid_modify_scanlocate_wifi_special_config(localid,index, id, modify_type,rssi,  scan_type, 
+											version_num, result_filter,
 											wtp_mac,snmp_flag, channel_flag,
 											dcli_dbus_connection);
 	return ret;
@@ -1611,6 +1699,8 @@ unsigned int snmp_wifi_locate_set_public_config
 	unsigned short channel_scan_interval,
 	unsigned short channel_scan_time,
 	unsigned char rssi,
+	unsigned char version_num,
+	unsigned char result_filter,
 	unsigned int server_ip,
 	unsigned short server_port,
 	unsigned char channel_flag,
@@ -1648,6 +1738,8 @@ unsigned int snmp_wifi_locate_set_public_config
 						DBUS_TYPE_UINT16,&channel_scan_interval,
 						DBUS_TYPE_UINT16,&channel_scan_time,
 						DBUS_TYPE_BYTE,&rssi,
+						DBUS_TYPE_BYTE,&version_num,
+						DBUS_TYPE_BYTE,&result_filter,
 						DBUS_TYPE_UINT32,&server_ip,
 						DBUS_TYPE_UINT16,&server_port,
 						DBUS_TYPE_BYTE,&channel_flag,
@@ -1762,6 +1854,12 @@ unsigned int snmp_wifi_locate_show_public_config_wtp
 		dbus_message_iter_next(&iter);
 
 		dbus_message_iter_get_basic(&iter,&(public_config->rssi));
+		dbus_message_iter_next(&iter);
+		
+		dbus_message_iter_get_basic(&iter,&(public_config->version_num));
+		dbus_message_iter_next(&iter);
+
+		dbus_message_iter_get_basic(&iter,&(public_config->result_filter));
 		dbus_message_iter_next(&iter);
 
 		dbus_message_iter_get_basic(&iter,&(public_config->server_ip));
@@ -1887,11 +1985,20 @@ printf("#####wangchao enter %s\n",__func__);
 
 			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].rssi));
 			dbus_message_iter_next(&iter_struct);
+			
+			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].version_num));
+			dbus_message_iter_next(&iter_struct);
+
+			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].result_filter));
+			dbus_message_iter_next(&iter_struct);
 
 			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].server_ip));
 			dbus_message_iter_next(&iter_struct);
 
 			dbus_message_iter_get_basic(&iter_struct,&(wifi_locate_config[i].server_port));
+			dbus_message_iter_next(&iter_struct);
+
+			
 			
 			dbus_message_iter_next(&iter_array);
 

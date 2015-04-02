@@ -518,6 +518,8 @@ WifiPositionGlobalPara_set( dot11WifiPositionGlobalInfoTable_rowreq_ctx *rowreq_
 	int ReportInterval = 0;
 	int Rssi = 0;
 	int ScanSwitch = 0;
+	int version_num = 0;
+	int result_filter = 0;
 
 	memset(input, 0, sizeof(input));
 	strncpy(input, WifiPositionGlobalPara_val_ptr, WifiPositionGlobalPara_val_ptr_len);
@@ -529,8 +531,8 @@ WifiPositionGlobalPara_set( dot11WifiPositionGlobalInfoTable_rowreq_ctx *rowreq_
 		strncpy(ServerIp, input, temp - input);
 		INET_ATON(ip_addr,ServerIp);
 		
-		sscanf(temp+1, "%d_%d_%d_%llu_%d_%d_%d_%d", &ServerPort, &ScanInterval, &ScanTime, 
-			&ScanChannle, &ScanType, &ReportInterval, &Rssi, &ScanSwitch);
+		sscanf(temp+1, "%d_%d_%d_%llu_%d_%d_%d_%d_%d_%d", &ServerPort, &ScanInterval, &ScanTime, 
+			&ScanChannle, &ScanType, &ReportInterval, &Rssi, &ScanSwitch, &version_num, &result_filter);
 	}
 
 	memset(wtpMac, 255, 6);
@@ -538,9 +540,25 @@ WifiPositionGlobalPara_set( dot11WifiPositionGlobalInfoTable_rowreq_ctx *rowreq_
     void *connection = NULL;
     if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
         return MFD_ERROR;
-        
+
 	
-	ret = set_wifi_locate_public_para_cmd(rowreq_ctx->data.parameter.local_id,rowreq_ctx->data.instanceID,wtpMac,ip_addr,ServerPort,ScanInterval,ScanTime,ScanChannle,ScanType,ReportInterval,Rssi,ScanSwitch,rowreq_ctx->tbl_idx.WifiPositionFrequency,connection);
+	ret = set_wifi_locate_public_para_cmd(
+	                                      rowreq_ctx->data.parameter.local_id,
+	                                      rowreq_ctx->data.instanceID,
+										  wtpMac,
+										  ip_addr,
+										  ServerPort,
+										  ScanInterval,
+										  ScanTime,
+										  ScanChannle,
+										  ScanType,
+										  ReportInterval,
+										  Rssi,
+										  version_num,
+										  result_filter,
+										  ScanSwitch,
+										  rowreq_ctx->tbl_idx.WifiPositionFrequency,
+										  connection);
 	if(ret == 1)
 	{
 		memcpy( rowreq_ctx->data.WifiPositionGlobalPara, WifiPositionGlobalPara_val_ptr, WifiPositionGlobalPara_val_ptr_len );

@@ -122,6 +122,7 @@ extern int set_wifi_locate_public_para_cmd(unsigned int local_id,int instance_id
 										unsigned short scan_time,unsigned long long channellist,
 										unsigned char scan_type,unsigned short report_interval,
 										unsigned char rssi,unsigned char isenable,
+										unsigned char version_num, unsigned char result_filter,
 										unsigned char channel_flag,void* connection);/*返回0表示失败，返回1表示成功*/
 															    /*返回-1表示port  should be 1 to 65535*/
 															    /*返回-2表示scan_interval  should be 0 to 2000*/
@@ -137,6 +138,16 @@ extern int set_wifi_locate_public_para_cmd(unsigned int local_id,int instance_id
 																				/*返回0表示失败，返回1表示成功*/
 																			    /*返回-1表示isenable  should be 0 to 1*/
 extern int set_wifi_locate_change_on_off_all_wtp_cmd(unsigned int local_id,int instance_id,unsigned char isenable,unsigned char channel_flag,void* connection);
+extern int set_wifi_locate_change_version_cmd(unsigned int local_id,unsigned int instance_id,
+									   unsigned char *wtpMac,
+									   unsigned char version_num,
+									   unsigned char channel_flag,
+									   void *connection);/*返回0表示失败，返回1表示成功*/
 
+int set_wifi_locate_change_filter_cmd( unsigned int local_id,unsigned int instance_id,
+									   unsigned char *wtpMac,
+									   unsigned char filter,
+									   unsigned char channel_flag,
+									   void *connection);/*返回0表示失败，返回1表示成功*/
 #endif
 

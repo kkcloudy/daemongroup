@@ -413,6 +413,37 @@ dot11WtpWifiPositionPublicInfoTable_commit( dot11WtpWifiPositionPublicInfoTable_
        }
     }
 
+/*********wangchao add ***********/
+    if (save_flags & COLUMN_WTPWIFIPOSITIONVERSION_FLAG) {
+       save_flags &= ~COLUMN_WTPWIFIPOSITIONVERSION_FLAG; /* clear wtpWifiPositionVersion */
+
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11WtpWifiPositionPublicInfoTable column wtpWifiPositionVersion commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo wtpWifiPositionScanSwitch
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONVERSION_FLAG;
+       }
+    }
+	
+    if (save_flags & COLUMN_WTPWIFIPOSITIONFILTER_FLAG) {
+       save_flags &= ~COLUMN_WTPWIFIPOSITIONFILTER_FLAG; /* clear wtpWifiPositionVersion */
+
+       if(-1 == rc) {
+           snmp_log(LOG_ERR,"dot11WtpWifiPositionPublicInfoTable column wtpWifiPositionfilter commit failed\n");
+       }
+       else {
+            /*
+             * set flag, in case we need to undo wtpWifiPositionScanSwitch
+             */
+            rowreq_ctx->column_set_flags |= COLUMN_WTPWIFIPOSITIONFILTER_FLAG;
+       }
+    }
+
+
+
     /*
      * if we successfully commited this row, set the dirty flag.
      */
@@ -2103,6 +2134,208 @@ wtpWifiPositionScanSwitch_undo( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *
     
     return MFD_SUCCESS;
 } /* wtpWifiPositionScanSwitch_undo */
+
+
+
+
+/*************wangchao add for wifi_locate ********/
+
+int
+wtpWifiPositionVersion_check_value( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionScanVersion_val)
+{
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionVersion_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:441:o: |-> Check for valid wtpWifiPositionScanSwitch value.
+     */
+
+    return MFD_SUCCESS; /* wtpWifiPositionScanSwitch value not illegal */
+} /* wtpWifiPositionScanSwitch_check_value */
+
+
+
+int
+wtpWifiPositionVersion_undo_setup( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionVersion_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup wtpWifiPositionScanSwitch undo.
+     */
+    /*
+     * copy wtpWifiPositionScanSwitch data
+     * set rowreq_ctx->undo->wtpWifiPositionScanSwitch from rowreq_ctx->data.wtpWifiPositionScanSwitch
+     */
+    rowreq_ctx->undo->wtpWifiPositionVersion = rowreq_ctx->data.wtpWifiPositionVersion;
+
+
+    return MFD_SUCCESS;
+} /* wtpWifiPositionScanSwitch_undo_setup */
+
+
+int
+wtpWifiPositionVersion_set( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionVersion_val)
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionVersion_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:461:M: |-> Set wtpWifiPositionScanSwitch value.
+     * set wtpWifiPositionScanSwitch value in rowreq_ctx->data
+     */
+	int rc = MFD_ERROR;
+	int ret = 0;
+	void *connection = NULL;
+
+    if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
+        return MFD_ERROR;		
+
+	ret = set_wifi_locate_change_version_cmd(rowreq_ctx->data.parameter.local_id,rowreq_ctx->data.instanceID,rowreq_ctx->data.wtp_mac,wtpWifiPositionVersion_val,rowreq_ctx->tbl_idx.WifiPositionFrequency,connection); 
+	if(ret == 1)
+	{		
+		rowreq_ctx->data.wtpWifiPositionVersion = wtpWifiPositionVersion_val;
+		rc = MFD_SUCCESS;
+	}
+	else
+	{
+		rc = MFD_ERROR;
+	}
+
+    return rc;
+} /* wtpWifiPositionScanSwitch_set */
+
+
+int
+wtpWifiPositionVersion_undo( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionVersion_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up wtpWifiPositionScanSwitch undo.
+     */
+    /*
+     * copy wtpWifiPositionScanSwitch data
+     * set rowreq_ctx->data.wtpWifiPositionScanSwitch from rowreq_ctx->undo->wtpWifiPositionScanSwitch
+     */
+    rowreq_ctx->data.wtpWifiPositionVersion = rowreq_ctx->undo->wtpWifiPositionVersion;
+
+    
+    return MFD_SUCCESS;
+} /* wtpWifiPositionScanSwitch_undo */
+
+
+int
+wtpWifiPositionFilter_check_value( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionScanVersion_val)
+{
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionFilter_check_value","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:441:o: |-> Check for valid wtpWifiPositionScanSwitch value.
+     */
+
+    return MFD_SUCCESS; /* wtpWifiPositionScanSwitch value not illegal */
+} /* wtpWifiPositionScanSwitch_check_value */
+
+
+
+int
+wtpWifiPositionFilter_undo_setup( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx)
+{
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionFilter_undo_setup","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:455:o: |-> Setup wtpWifiPositionScanSwitch undo.
+     */
+    /*
+     * copy wtpWifiPositionScanSwitch data
+     * set rowreq_ctx->undo->wtpWifiPositionScanSwitch from rowreq_ctx->data.wtpWifiPositionScanSwitch
+     */
+    rowreq_ctx->undo->wtpWifiPositionFilter = rowreq_ctx->data.wtpWifiPositionFilter;
+
+
+    return MFD_SUCCESS;
+} /* wtpWifiPositionScanSwitch_undo_setup */
+
+
+int
+wtpWifiPositionFilter_set( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx, u_long wtpWifiPositionFilter_val)
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionFilter_set","called\n"));
+
+    /** should never get a NULL pointer */
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:461:M: |-> Set wtpWifiPositionScanSwitch value.
+     * set wtpWifiPositionScanSwitch value in rowreq_ctx->data
+     */
+	int rc = MFD_ERROR;
+	int ret = 0;
+    void *connection = NULL;
+
+    if(SNMPD_DBUS_ERROR == get_instance_dbus_connection(rowreq_ctx->data.parameter, &connection, SNMPD_INSTANCE_MASTER_V3))
+        return MFD_ERROR;		
+
+	
+	ret = set_wifi_locate_change_filter_cmd(rowreq_ctx->data.parameter.local_id,rowreq_ctx->data.instanceID,rowreq_ctx->data.wtp_mac,wtpWifiPositionFilter_val,rowreq_ctx->tbl_idx.WifiPositionFrequency,connection); 
+	if(ret == 1)
+	{		
+		rowreq_ctx->data.wtpWifiPositionFilter = wtpWifiPositionFilter_val;
+		rc = MFD_SUCCESS;
+	}
+	else
+	{
+		rc = MFD_ERROR;
+	}
+
+    return rc;
+} /* wtpWifiPositionScanSwitch_set */
+
+
+int
+wtpWifiPositionFilter_undo( dot11WtpWifiPositionPublicInfoTable_rowreq_ctx *rowreq_ctx)
+{
+
+    DEBUGMSGTL(("verbose:dot11WtpWifiPositionPublicInfoTable:wtpWifiPositionFilter_undo","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+    /*
+     * TODO:456:o: |-> Clean up wtpWifiPositionScanSwitch undo.
+     */
+    /*
+     * copy wtpWifiPositionScanSwitch data
+     * set rowreq_ctx->data.wtpWifiPositionScanSwitch from rowreq_ctx->undo->wtpWifiPositionScanSwitch
+     */
+    rowreq_ctx->data.wtpWifiPositionFilter = rowreq_ctx->undo->wtpWifiPositionFilter;
+
+    
+    return MFD_SUCCESS;
+} /* wtpWifiPositionScanSwitch_undo */
+
+
+
+/*****************************************************************/
+
 
 /**
  * check dependencies

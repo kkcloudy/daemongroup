@@ -2524,12 +2524,15 @@ CWBool CWAssembleConfigurationUpdateRequest_WTP(CWProtocolMessage **messagesPtr,
 														      elem->mqinfo.u.WtpInfo.c1,
 														      elem->mqinfo.u.WtpInfo.c2,
 														      elem->mqinfo.u.WtpInfo.value1,
+															  elem->mqinfo.u.WtpInfo.value4,
+														      elem->mqinfo.u.WtpInfo.i2,
 														      elem->mqinfo.u.WtpInfo.s1,
 														      elem->mqinfo.u.WtpInfo.s2,
 														      elem->mqinfo.u.WtpInfo.s3,
 														      elem->mqinfo.u.WtpInfo.value2,
 														      elem->mqinfo.u.WtpInfo.value3,
-														      (unsigned char *)elem->mqinfo.u.WtpInfo.value ))) 
+														      (unsigned char *)elem->mqinfo.u.WtpInfo.value 
+														      ))) 
 			{
 				for(i = 0; i <= k; i++)
 				{
