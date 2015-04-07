@@ -1715,13 +1715,28 @@ void hmd_rdc_restart(unsigned islocal, unsigned int vrrid)
 	if (0 == vrrid) {
 		islocal = 1;
 	}
-	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/rdc stop %d %d", islocal, vrrid);
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/rdcd stop %d %d", islocal, vrrid);
 	system(cmd);
-	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/rdc start %d %d", islocal, vrrid);
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/rdcd start %d %d", islocal, vrrid);
 	system(cmd);
 
 	return;
 }
+void hmd_pdc_restart(unsigned islocal, unsigned int vrrid)
+{
+	char cmd[128];
+	
+	if (0 == vrrid) {
+		islocal = 1;
+	}
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/pdcd stop %d %d", islocal, vrrid);
+	system(cmd);
+	snprintf(cmd, sizeof(cmd), "sudo /etc/init.d/pdcd start %d %d", islocal, vrrid);
+	system(cmd);
+
+	return;
+}
+
 int dhcp_to_start(){
 	char buf[128] = {0};
 	int ret = 0;
@@ -1793,7 +1808,9 @@ int hmd_rdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
 	
 	//hmd_set_hot_restart_flag(HMD_SET_FLAG, HOST_SLOT_NO, islocal, vrrid);
 	
-	snprintf(path, sizeof(path), "%s%s%d-%d-%d.conf", DEFAULT_CONFIG_PATH, "RDC", slotid, 0, vrrid);
+	snprintf(path, sizeof(path), "%s/slot%d/hansi_rdc%d", DEFAULT_CONFIG_DIR, slotid, vrrid);
+	hmd_syslog_info("path=%s\n", path);
+	
 	
 	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_RDC);
 	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_RDC);
@@ -1805,11 +1822,18 @@ int hmd_rdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
 	
 	if(HOST_SLOT_NO == MASTER_SLOT_NO)
 	{
-		hmd_load_config(path);
+			if (slotid == HOST_SLOT_NO) {
+				hmd_syslog_info("starta rdc %d for slot %d\n", vrrid, slotid);
+				hmd_rdc_restart(islocal, vrrid);
+			}
+			sleep(5);
+			hmd_load_config(path);
 	}
 	else
 	{	/* active master rcv msg will reload InstID config */
-		//notice_hmd_server_state_change(vrrid, islocal, HMD_RESTART, 0);
+			hmd_syslog_info("startb rdc for slot %d\n", vrrid, slotid);
+			hmd_rdc_restart(islocal, vrrid);
+			notice_hmd_server_state_change(vrrid, islocal, HMD_RELOAD_CONFIG_FOR_RDC, 0);
 	}
 		
 	//HMD_CFG_UNLOCK(vrrid, HMD_RELOAD_MOD_RDC);
@@ -1826,27 +1850,35 @@ int hmd_pdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
 	
 	//hmd_set_hot_restart_flag(HMD_SET_FLAG, HOST_SLOT_NO, islocal, vrrid);
 	
-	snprintf(path, sizeof(path), "%s%s%d-%d-%d.conf", DEFAULT_CONFIG_PATH, "PDC", slotid, 0, vrrid);
+	snprintf(path, sizeof(path), "%s/slot%d/hansi_pdc%d", DEFAULT_CONFIG_DIR, slotid, vrrid);
+	hmd_syslog_info("path=%s\n", path);
 	
 	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_PDC);
 	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_RDC);
 	
-	hmd_rdc_restart(islocal, vrrid);
+	hmd_pdc_restart(islocal, vrrid);
 
 	hmd_syslog_info("wait hansi %d restart eag thread\n", vrrid);
 	sleep(5);
 	
 	if(HOST_SLOT_NO == MASTER_SLOT_NO)
 	{
-		hmd_load_config(path);
+			if (slotid == HOST_SLOT_NO) {
+				hmd_syslog_info("starta pdc for slot %d\n", vrrid, slotid);
+				hmd_pdc_restart(islocal, vrrid);
+			}
+			sleep(5);
+			hmd_load_config(path);
 	}
 	else
 	{	/* active master rcv msg will reload InstID config */
-		//notice_hmd_server_state_change(vrrid, islocal, HMD_RESTART, 0);
+			hmd_syslog_info("startb pdc %d for slot %d\n", vrrid, slotid);
+			hmd_pdc_restart(islocal, vrrid);
+			notice_hmd_server_state_change(vrrid, islocal, HMD_RELOAD_CONFIG_FOR_PDC, 0);
 	}
 		
 	//HMD_CFG_UNLOCK(vrrid, HMD_RELOAD_MOD_RDC);
-	hmd_syslog_info("%s cfg hansi %d unlock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_RDC);
+	hmd_syslog_info("%s cfg hansi %d unlock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_PDC);
 
 	//hmd_set_hot_restart_flag(HMD_CLR_FLAG, HOST_SLOT_NO, islocal, vrrid);
 
@@ -2018,7 +2050,7 @@ int hansi_state_check(int InstID, int islocaled, enum hmd_reload_type type){
 				hmd_rdc_reload(HOST_SLOT_NO, islocaled, InstID);
 			} else if (HMD_RELOAD_MOD_PDC == type){
 				hmd_syslog_warning("reload pdc %s %d\n", __FUNCTION__, __LINE__);
-				hmd_rdc_reload(HOST_SLOT_NO, islocaled, InstID);
+				hmd_pdc_reload(HOST_SLOT_NO, islocaled, InstID);
 			} else if (HMD_RELOAD_MOD_WCPSS == type) {
 				
 				notice_vrrp_config_service_change_state(InstID, 0);
@@ -2115,7 +2147,7 @@ int get_memory_check_flag(int InstID, int islocaled, int* flag)
 	
 	fp = fopen(defaultPath, "r");
 	if(NULL == fp){
-		hmd_syslog_warning("open file %s failed: %s.\n", defaultPath, strerror(errno));
+		hmd_syslog_warning("open file %s failed .\n", defaultPath);
 		return -1;
 	}
 	fscanf(fp, "%d", flag);
@@ -2155,7 +2187,7 @@ int get_process_check_flag(int InstID, int islocaled, int* flag)
 	
 	fp = fopen(defaultPath, "r");
 	if(NULL == fp){
-		hmd_syslog_warning("open file %s failed: %s.\n", defaultPath, strerror(errno));
+		hmd_syslog_warning("open file %s failed .\n", defaultPath);
 		return -1;
 	}
 	fscanf(fp, "%d", flag);
