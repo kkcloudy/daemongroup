@@ -1815,10 +1815,10 @@ int hmd_rdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
 	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_RDC);
 	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_RDC);
 	
-	hmd_rdc_restart(islocal, vrrid);
+	/*hmd_rdc_restart(islocal, vrrid);
 
 	hmd_syslog_info("wait hansi %d restart eag thread\n", vrrid);
-	sleep(5);
+	sleep(5);*/
 	
 	if(HOST_SLOT_NO == MASTER_SLOT_NO)
 	{
@@ -1856,10 +1856,10 @@ int hmd_pdc_reload(unsigned slotid, unsigned int islocal, unsigned int vrrid)
 	hmd_syslog_info("%s cfg hansi %d lock type %d\n", __func__, vrrid, HMD_RELOAD_MOD_PDC);
 	//HMD_CFG_LOCK(vrrid, HMD_RELOAD_MOD_RDC);
 	
-	hmd_pdc_restart(islocal, vrrid);
+	/*hmd_pdc_restart(islocal, vrrid);
 
 	hmd_syslog_info("wait hansi %d restart eag thread\n", vrrid);
-	sleep(5);
+	sleep(5);*/
 	
 	if(HOST_SLOT_NO == MASTER_SLOT_NO)
 	{
