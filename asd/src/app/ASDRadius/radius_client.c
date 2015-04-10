@@ -63,6 +63,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static int radius_auth_server_connect_failed_times;
 static int radius_acct_server_connect_failed_times;
+static int radius_auth_serv_sock_creat_failed_times = 0;
+static int radius_acct_serv_sock_creat_failed_times = 0;
 //static int dm_sock = 0;
 
 /*
@@ -2027,22 +2029,34 @@ int radius_client_init_auth(void *circle_ctx, void *timeout_ctx)
 	int ret = 0;
 	//int yes = 1;
 	radius->auth_serv_sock = socket(PF_INET, SOCK_DGRAM, 0);
-	if (radius->auth_serv_sock < 0)
-		asd_printf(ASD_DBUS,MSG_ERROR,"%s socket create failed: %s\n",__func__, strerror(errno));/* yjl 2014-2-28 */
+	if (radius->auth_serv_sock < 0){
+        perror("socket[PF_INET,SOCK_DGRAM]");
+		asd_printf(ASD_DBUS,MSG_CRIT,"auth_serv_sock creat failed:%s\n",strerror(errno));
+	}	
 	else
 		ok++;
 
 #ifdef ASD_IPV6
 	radius->auth_serv_sock6 = socket(PF_INET6, SOCK_DGRAM, 0);
-	if (radius->auth_serv_sock6 < 0)
-		perror("socket[PF_INET6,SOCK_DGRAM]");
+	if (radius->auth_serv_sock6 < 0){	
+	    perror("socket[PF_INET6,SOCK_DGRAM]");
+		asd_printf(ASD_DBUS,MSG_CRIT,"auth_serv_sock6 creat failed:%s\n",strerror(errno));
+	}	
 	else
 		ok++;
 #endif /* ASD_IPV6 */
 
 	if (ok == 0){
 		asd_printf(ASD_DBUS,MSG_CRIT,"%s socket create failed\n",__func__);
-		exit(1);
+		radius_auth_serv_sock_creat_failed_times++;
+		if(radius_auth_serv_sock_creat_failed_times == 10){
+			asd_printf(ASD_DBUS,MSG_CRIT,"%s try to create socket again failed\n",__func__);
+            exit(1);
+		}
+		circle_cancel_timeout((void *)radius_client_init_auth, radius, (void*)1);		
+		circle_register_timeout(10, 0,
+				       (void *)radius_client_init_auth, radius,(void*)1 );
+		return 0;
 	}
 	
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"radius->auth_serv_sock: %d\n",radius->auth_serv_sock);		//for test
@@ -2178,22 +2192,34 @@ int radius_client_init_acct(void *circle_ctx, void *timeout_ctx)
 	//struct sockaddr *addr;
 	//socklen_t addrlen;
 	radius->acct_serv_sock = socket(PF_INET, SOCK_DGRAM, 0);
-	if (radius->acct_serv_sock < 0)
+	if (radius->acct_serv_sock < 0){
 		perror("socket[PF_INET,SOCK_DGRAM]");
+	    asd_printf(ASD_DBUS,MSG_CRIT,"acct_serv_sock creat failed:%s\n",strerror(errno));
+	}
 	else
 		ok++;
 
 #ifdef ASD_IPV6
 	radius->acct_serv_sock6 = socket(PF_INET6, SOCK_DGRAM, 0);
-	if (radius->acct_serv_sock6 < 0)
+	if (radius->acct_serv_sock6 < 0){
 		perror("socket[PF_INET6,SOCK_DGRAM]");
+		asd_printf(ASD_DBUS,MSG_CRIT,"acct_serv_sock6 creat failed:%s\n",strerror(errno));
+	}
 	else
 		ok++;
 #endif /* ASD_IPV6 */
 
 	if (ok == 0){
 		asd_printf(ASD_DBUS,MSG_CRIT,"%s socket create failed\n",__func__);
-		exit(1);
+		radius_acct_serv_sock_creat_failed_times++;
+		if(radius_acct_serv_sock_creat_failed_times == 10){
+			asd_printf(ASD_DBUS,MSG_CRIT,"%s try to create socket again failed\n",__func__);
+            exit(1);
+		}
+		circle_cancel_timeout((void *)radius_client_init_acct, radius, (void*)1);	
+		circle_register_timeout(10, 0,
+				       (void *)radius_client_init_acct, radius,(void*)1);
+		return 0;
 	}
 
 	asd_printf(ASD_DEFAULT,MSG_DEBUG,"radius->acct_serv_sock: %d\n",radius->acct_serv_sock);		//for test
