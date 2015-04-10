@@ -2101,7 +2101,8 @@ int WID_CREATE_NEW_WTP(char *WTPNAME, unsigned int WTPID, unsigned char* WTPSN, 
 	gwtpid = WTPID*L_RADIO_NUM;
 	AC_WTP[WTPID]->RadioCount = num;
   //AC_WTP[WTPID]->channelsendtimes = 1;   /*wuwl add for send channel_cont only one time at the beginning of the wtp access*/
-		for(i=0; i < 2; i++){	
+		//for(i=0; i < 2; i++)
+		for(i=0; ((i<num)&&(i<L_RADIO_NUM)); i++){	
 		AC_RADIO[gwtpid + i] = (WID_WTP_RADIO*)WID_MALLOC(sizeof(WID_WTP_RADIO));
 		if (NULL == AC_RADIO[gwtpid + i] )
 		{	
