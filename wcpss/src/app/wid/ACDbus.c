@@ -29976,8 +29976,8 @@ DBusMessage *wid_dbus_interface_wlan_flow_check(DBusConnection *conn, DBusMessag
 		return NULL;
 	}
 	
-	wid_syslog_debug_debug(WID_DBUS,"AC_WLAN->flow_check = %d,status = %d\n",state,AC_WLAN[wlanid]->Status );
 	if(AC_WLAN[wlanid]!=NULL){
+		wid_syslog_debug_debug(WID_DBUS,"AC_WLAN->flow_check = %d,status = %d\n",state,AC_WLAN[wlanid]->Status );
 		if (AC_WLAN[wlanid]->want_to_delete == 1)		/* Huangleilei add for ASXXZFI-1622 */
 		{
 			ret = WID_WANT_TO_DELETE_WLAN;
