@@ -2062,6 +2062,11 @@ int hansi_state_check(int InstID, int islocaled, enum hmd_reload_type type){
 				memset(buf, 0, 128);
 				sprintf(buf,"sudo /etc/init.d/had start %d", InstID);
 				system(buf);
+				sprintf(buf,"sudo /etc/init.d/dhcpsnooping stop");
+				system(buf);			
+				memset(buf, 0, 128);
+				sprintf(buf,"sudo /etc/init.d/dhcpsnooping start ");
+				system(buf);
 
 				hmd_syslog_info("ready to delbr for inst %d\n", InstID);
 				//delete ebr or wlan for this inst from bridge

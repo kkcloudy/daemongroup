@@ -9186,19 +9186,126 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 	for (slot_id = 0; slot_id <= MAX_SLOT_NUM; slot_id++) {
 		if(active_master_slot == slot_id)
 		{dhcp_flag = 1;
-			tmp = dcli_dhcp_show_running_cfg2(slot_id);
-			if(tmp != NULL){
-				if (0 != strlen(tmp)){
-					dcli_config_writev2(tmp,slot_id,0,"dhcp_poll",0); 
-					if(tmp){
-						free(tmp);
-						tmp = NULL;
+				for (profile = 0; profile <= DCLI_VRRP_INSTANCE_CNT; profile++) {
+				    					
+					/* [1] check if had process has started before or not */
+					instRun = dcli_hmd_hansi_is_running(vty,slot_id, 0, profile);	
+					
+					if (INSTANCE_NO_CREATED == instRun) {
+						//vty_out(vty, "had instance %d not created!\n", profile);
+						continue;
 					}
+					else if (DCLI_VRRP_INSTANCE_CHECK_FAILED == instRun) {
+						//vty_out(vty, "check had instance %d whether created was failed!\n",
+						//			profile);
+						continue;
+					}
+				dcli_config_write("",localid,slot_id,profile,1,0);
+				memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+				cursor = showRunningCfg_str;
+				totalLen = 0;
+				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
+						cursor = showRunningCfg_str + totalLen;
+				tmp = dcli_dhcp_show_running_cfg2(slot_id); 		
+				if(tmp != NULL){
+					if (0 != strlen(tmp)) { 				
+						totalLen += sprintf(cursor, " \n");
+						cursor = showRunningCfg_str + totalLen;
+		
+						totalLen += sprintf(cursor, "%s\n",tmp);
+						cursor = showRunningCfg_str + totalLen;
+					}
+					free(tmp);
+					tmp = NULL;
 				}else{
 					free(showRunningCfg_str);
 					return 1;
 				}
-			}
+				totalLen += sprintf(cursor, " exit\n", profile);
+						cursor = showRunningCfg_str + totalLen;				
+				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);
+				dcli_config_writev2(showRunningCfg_str,slot_id,0,"dhcp_poll",0); 	
+				//vtysh_add_show_string(showRunningCfg_str);		
+				memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+				cursor = showRunningCfg_str;
+				totalLen = 0;
+				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
+						cursor = showRunningCfg_str + totalLen;
+				/*dhcp ipv6 section*/
+				tmp = dcli_dhcp_ipv6_show_running_cfg2(slot_id); 		
+				if(tmp != NULL){
+					if (0 != strlen(tmp)) { 				
+						totalLen += sprintf(cursor, " \n");
+						cursor = showRunningCfg_str + totalLen;
+		
+						totalLen += sprintf(cursor, "%s\n",tmp);
+						cursor = showRunningCfg_str + totalLen;
+					}
+					free(tmp);
+					tmp = NULL;
+				}else{
+					free(showRunningCfg_str);
+					return 1;
+				}
+				totalLen += sprintf(cursor, " exit\n", profile);
+						cursor = showRunningCfg_str + totalLen;
+				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);		
+				dcli_config_writev2(showRunningCfg_str,slot_id,0,"dhcp_ipv6",0);
+				//vtysh_add_show_string(showRunningCfg_str);	
+				memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+				cursor = showRunningCfg_str;
+				totalLen = 0;
+				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
+						cursor = showRunningCfg_str + totalLen;
+				tmp = dcli_dhcrelay_show_running_cfg2(vty,slot_id); 		
+				if(tmp != NULL){
+					if (0 != strlen(tmp)) { 				
+						totalLen += sprintf(cursor, " \n");
+						cursor = showRunningCfg_str + totalLen;
+		
+						totalLen += sprintf(cursor, "%s\n",tmp);
+						cursor = showRunningCfg_str + totalLen;
+					}
+					free(tmp);
+					tmp = NULL;
+				}else{
+					free(showRunningCfg_str);
+					return 1;
+				}
+				totalLen += sprintf(cursor, " exit\n", profile);
+						cursor = showRunningCfg_str + totalLen;
+				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);		
+				dcli_config_writev2(showRunningCfg_str,slot_id,0,"dhcp_relay",0); 	
+				//vtysh_add_show_string(showRunningCfg_str);		
+				memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
+				cursor = showRunningCfg_str;
+				totalLen = 0;
+				totalLen += sprintf(cursor, "config hansi-profile %d-%d\n", slot_id,profile);
+						cursor = showRunningCfg_str + totalLen;
+
+				tmp = dcli_dhcp_snp_show_running_config2(vty, slot_id); 		
+				if(tmp != NULL){
+					if (0 != strlen(tmp)) { 				
+						totalLen += sprintf(cursor, " \n");
+						cursor = showRunningCfg_str + totalLen;
+		
+						totalLen += sprintf(cursor, "%s\n",tmp);
+						cursor = showRunningCfg_str + totalLen;
+					}
+					free(tmp);
+					tmp = NULL;
+				}else{
+					free(showRunningCfg_str);
+					return 1;
+				}				
+				totalLen += sprintf(cursor, " exit\n", profile);
+						cursor = showRunningCfg_str + totalLen;
+				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);		
+				dcli_config_writev2(showRunningCfg_str,slot_id,0,"dhcp_snp",0); 	
+				//vtysh_add_show_string(showRunningCfg_str);		
+					}
+				
+		
 		}
 		else
 			dhcp_flag = 0;
@@ -9246,12 +9353,11 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 				cursor = showRunningCfg_str + totalLen;
 
 		if (0 != profile) {
-		    dcli_config_write("",localid,slot_id,profile,create_cfg_flag,0);
-		    if(create_cfg_flag)
-		        create_cfg_flag = 0;
-		    
+		    		    
 			if(dhcp_flag == 0){
-				dhcp_flag = 1;
+				dcli_config_write("",localid,slot_id,profile,create_cfg_flag,0);
+			   	 if(create_cfg_flag)
+		        			create_cfg_flag = 0;
 				tmp = dcli_dhcp_show_running_cfg2(slot_id); 		
 				if(tmp != NULL){
 					if (0 != strlen(tmp)) { 				
@@ -9379,9 +9485,9 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 				tmp = NULL;
 			}
 			
-			if(active_master_slot == slot_id)
+			/*if(active_master_slot == slot_id)
 				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,1,0);		
-			else
+			else*/
 				dcli_config_write(showRunningCfg_str,localid,slot_id,profile,0,0);				
 			dcli_config_writev2(showRunningCfg_str,slot_id,profile,"hansi_wcpss",0);		
 			vtysh_add_show_string(showRunningCfg_str);		
@@ -9745,6 +9851,7 @@ int dcli_vrrp_show_running_cfg(struct vty *vty)
 		#endif /* !_VERSION_18SP7_ */	
 			/*end*/
 		}
+		create_cfg_flag = 0;
 		
 		/* dhcp config section */
 		memset(showRunningCfg_str, 0, DCLI_VRRP_SHOW_RUNNING_CFG_LEN);
