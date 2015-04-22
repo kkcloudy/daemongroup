@@ -3670,6 +3670,34 @@ master_board_send_interface_infomation_request_to_vice(int command, tipc_client 
 master_board_request_interface_packets_statistics(struct thread *thread)
 */
 int
+master_send_set_policy_route (tipc_client *client, int is_add,char *name,char *ipaddr,int port,int mask,int id)
+{
+  struct stream *s;
+
+  if (! client->ifinfo)
+    return 0;
+
+  s = client->obuf;
+  stream_reset (s);
+  
+  tipc_packet_create_header (s,ZEBRA_INTERFACE_SET_POLICY_ROUE);
+  
+  stream_putl (s, is_add);
+   stream_put (s, name, INTERFACE_NAMSIZ);
+   stream_put (s, ipaddr, 20);
+  stream_putl (s,port);
+  stream_putl (s, mask);
+  stream_putl (s, id);
+  stream_putw_at (s, 0, stream_get_endp (s));
+
+  return master_send_message_to_vice(client);
+}
+
+
+/*int
+master_board_request_interface_packets_statistics(struct thread *thread)
+*/
+int
 master_board_request_interface_packets_statistics(int if_flow_command)
 {
 	/*  tipc_client  *master_board = THREAD_ARG(thread);*/

@@ -31,6 +31,9 @@
 #include "string.h"
 extern unsigned int se_agent_interval;
 
+
+
+struct policy_route *policy_head;
 /* General fucntion for static route. */
 static unsigned int
 zebra_get_route_num(unsigned int );
@@ -2581,6 +2584,175 @@ DEFUN (show_if_flow_stats_interval_fun,
   return CMD_SUCCESS;
 }
 
+DEFUN (set_policy_route_fun,
+       set_policy_route_cmd,
+       "(add|del) policy route IFNAME A.B.C.D [PORT]",
+       "add|del policy route\n"
+       "policy route\n"
+       "policy route\n"
+       "interface name\n "
+       "IP  <network>, e.g., 35.0.0.0\n"
+       "port ID\n"
+       )
+{
+	int is_add;
+	char cmd[255];
+	char name[20];
+	char ipaddr[20];
+	int port=0;
+	int rt_mask = 2;
+	int rt_id = 100;
+	int i = 0;
+	struct policy_route *rt_next;
+	struct policy_route *rt_new;
+
+	if(0 == strcmp(argv[0],"add"))
+		is_add = 1;
+	else if(0 == strcmp(argv[0],"del"))
+		is_add = 2;
+	
+	
+	memset(name,0,20);
+	memset(ipaddr,0,20);
+	memcpy(name,argv[1],strlen(argv[1]));
+	memcpy(ipaddr,argv[2],strlen(argv[2]));
+	
+
+	if(argc== 4)
+		port = atoi(argv[3]);
+	else if (argc == 3)
+		port  = 80;
+	
+	if(is_add == 1)
+	{		
+			
+			
+			rt_new =  (struct policy_route *)malloc(sizeof(struct policy_route ));
+			if(rt_new == NULL)
+			{
+				vty_out (vty, "malloc fail\n");
+   			   	return CMD_WARNING;
+			}
+			memset(rt_new,0,sizeof(struct policy_route ));
+			rt_new->is_add = is_add;
+			memcpy(rt_new->ifname,argv[1],strlen(argv[1]));
+			memcpy(rt_new->ip,argv[2],strlen(argv[2]));
+			rt_new->port = port;
+			rt_next = policy_head;
+			while(rt_next)
+			{
+				if(rt_next->next == NULL)
+					break;
+				if(0 == strcmp(rt_next->ifname,argv[1]))
+				{
+					vty_out(vty,"the policy route exist.\n");
+					return CMD_WARNING;
+				}
+				i++;
+				rt_next = rt_next->next;
+			}
+						
+			if (i == 0)
+			{
+				
+				rt_new->mask = 2;
+				rt_new->id = 100;
+				rt_new->next = NULL;
+				rt_next->next=rt_new;
+				
+			}
+			else
+			{
+				
+				if(i >100)
+				{
+					vty_out (vty, "too much policy route\n");
+   				   	return CMD_WARNING;
+				}
+				
+				rt_mask = 2+i;
+				rt_id = 100+ i;
+				if(rt_next->mask == rt_mask)
+				{
+					rt_mask += 1;
+					rt_id += 1;
+				}
+				rt_new->mask = rt_mask;
+				rt_new->id = rt_id;
+				rt_new->next = NULL;
+				rt_next->next = rt_new;
+				
+				
+			}
+			
+		}
+		else if (is_add  == 2)
+		{
+			rt_next = policy_head->next;
+			rt_new = policy_head;
+			while(rt_next)
+			{
+				if(0 == strcmp(rt_next->ifname,argv[1]))
+				{
+					rt_mask = rt_next->mask;
+					rt_id = rt_next->id;
+					rt_new ->next= rt_next->next;
+					free(rt_next);
+					rt_next = NULL;
+					break;
+			
+				}
+				rt_new = rt_new->next;
+				rt_next = rt_next->next;
+				
+			}
+
+		}
+	memset(cmd,0,255);
+	sprintf(cmd,"sudo rt_policy.sh %d %s %s %d %d %d",is_add,name,ipaddr,port,rt_mask,rt_id);
+	system(cmd);
+  	 set_policy_route ( is_add,name,ipaddr, port,rt_mask,rt_id);
+	  
+  	return CMD_SUCCESS;
+}
+
+DEFUN (show_policy_route_fun,
+       show_policy_route_cmd,
+       "show policy route",
+       "show policy route\n"
+       "show policy route\n"
+       "show policy route\n"
+       )
+{
+	int i =0;
+	struct policy_route *rt_next;
+	if(policy_head->next == NULL)
+	{
+		vty_out(vty,"no policy route\n");
+	}
+	else
+	{
+		rt_next = policy_head->next;
+		while(rt_next)
+		{
+			i++;	
+			rt_next = rt_next->next;
+		}
+		vty_out(vty,"policy route num:  %d\n",i);
+		rt_next = policy_head->next;
+		vty_out(vty,"==========================================================================\n");
+		vty_out(vty,"%-21s %-21s %-10s %-10s %-10s\n","IFNAME","IP","PORT","MASK","TABLES_ID");
+		while(rt_next)
+		{		
+			vty_out(vty,"%-21s %-21s %-10d %-10d %-10d\n",rt_next->ifname,rt_next->ip,rt_next->port,rt_next->mask,rt_next->id);
+			rt_next = rt_next->next;
+		}
+		vty_out(vty,"==========================================================================\n");
+	}
+   
+  return CMD_SUCCESS;
+}
+
 /* Static ip route configuration write function. */
 static int
 zebra_ip_config (struct vty *vty)
@@ -2593,6 +2765,19 @@ zebra_ip_config (struct vty *vty)
   write += static_config_ipv6 (vty);
 #endif /* HAVE_IPV6 */
 //  write += rp_filter_show_running(vty);
+if(policy_head->next != NULL)
+{
+	struct policy_route *rt_next;
+	rt_next = policy_head->next;
+	while(rt_next)
+	{
+		if (rt_next->port == 80)
+			vty_out(vty, "add policy route %s %s\n", rt_next->ifname,rt_next->ip);
+		else
+			vty_out(vty, "add policy route %s %s %d\n", rt_next->ifname,rt_next->ip,rt_next->port);
+		rt_next = rt_next->next;
+	}
+}
 
   return write;
 }
@@ -2604,6 +2789,11 @@ struct cmd_node ip_node = { IP_NODE,  "",  1 };
 void
 zebra_vty_init (void)
 {
+	
+	policy_head =  (struct policy_route *)malloc(sizeof(struct policy_route ));
+	memset(policy_head,0,sizeof(struct policy_route ));
+	policy_head->next = NULL;
+	
 	install_node (&ip_node, zebra_ip_config, "IP_NODE");
 
 	install_element (CONFIG_NODE, &ip_route_cmd);
@@ -2632,6 +2822,8 @@ zebra_vty_init (void)
 	install_element (CONFIG_NODE, &ip_route_mask_distance_cmd);
 	install_element (CONFIG_NODE, &ip_route_mask_flags_distance_cmd);
 	install_element (CONFIG_NODE, &ip_route_mask_flags_distance2_cmd);
+	install_element (CONFIG_NODE, &set_policy_route_cmd);
+	install_element (CONFIG_NODE, &show_policy_route_cmd);
 	/*deleted by gxd*/
 	// install_element (CONFIG_NODE, &no_ip_route_distance_cmd);
 	// install_element (CONFIG_NODE, &no_ip_route_flags_distance_cmd);

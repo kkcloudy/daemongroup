@@ -260,6 +260,9 @@ extern int
 static_delete_ipv4 (struct prefix *p, struct in_addr *gate, const char *ifname,
 		    u_char distance, u_int32_t vrf_id);
 extern int
+set_policy_route(int is_add,char *name,char *ipaddr,int port,int mask,int id);
+
+extern int
 static_delete_ipv4_by_vtysh(struct prefix *p, struct in_addr *gate, const char *ifname,
 		    u_char distance, u_int32_t vrf_id);
 

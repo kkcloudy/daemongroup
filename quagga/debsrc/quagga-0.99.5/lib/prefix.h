@@ -89,6 +89,17 @@ struct prefix_rd
   u_char val[8] __attribute__ ((aligned (8)));
 };
 
+struct policy_route
+{
+	int is_add;
+	char ifname[20];
+	char ip[20];
+	int port;
+	int mask;
+	int id;
+	struct policy_route *next;
+};
+
 #ifndef INET_ADDRSTRLEN
 #define INET_ADDRSTRLEN 16
 #endif /* INET_ADDRSTRLEN */

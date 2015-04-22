@@ -3240,6 +3240,35 @@ vice_interface_send_to_master(tipc_server *vice_board)
  }
 
  
+ int
+ vice_set_policy_route(int command, tipc_server *vice_board, zebra_size_t length)
+ {
+	 int is_add= 0;
+	char name[20];
+	char ipaddr[20];
+	char cmd[255];
+	int port;
+	int mask;
+	int id;
+	 if(!vice_board || !vice_board->ibuf)
+	 {
+		 zlog_warn("vice board or inbuf is null .\n");
+		 return -1;
+	 }
+	 is_add = stream_getl(vice_board->ibuf);
+	 stream_get (name, vice_board->ibuf,INTERFACE_NAMSIZ);
+	stream_get (ipaddr, vice_board->ibuf,INTERFACE_NAMSIZ);
+	 port = stream_getl(vice_board->ibuf);
+	 mask = stream_getl(vice_board->ibuf);
+	 id = stream_getl(vice_board->ibuf);
+	  memset(cmd,0,255);
+	 sprintf(cmd,"sudo rt_policy.sh %d %s %s %d %d %d",is_add,name,ipaddr,port,mask,id);
+	 zlog_info("chenjun    %s \n",cmd);
+	 system(cmd);
+ 	return 1;
+	 
+ }
+
  
  struct interface *
  vice_interface_state_set(struct interface *ifp, uint64_t flags, int rpa_done, int normal_done)
@@ -6911,7 +6940,9 @@ vice_board_read (struct thread *thread)
 		vice_interface_infomation_request(ZEBRA_INTERFACE_INFOMATION_REQUEST,vice_board,length);
 
 		break;
-		
+	case ZEBRA_INTERFACE_SET_POLICY_ROUE:  
+		vice_set_policy_route(ZEBRA_INTERFACE_SET_POLICY_ROUE ,vice_board,length);
+		break;	
 	  
     default:
       break;

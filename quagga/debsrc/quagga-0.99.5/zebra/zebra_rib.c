@@ -3354,6 +3354,35 @@ static_delete_ipv4 (struct prefix *p, struct in_addr *gate, const char *ifname,
   return 1;
 }
 
+int
+set_policy_route(int is_add,char *name,char *ipaddr,int port,int mask,int id)
+	{
+		
+		struct listnode *node, *nnode;
+		struct zserv *client;
+		
+		tipc_client *master_board;
+		tipc_server *vice_board;
+
+		
+		 if(product->board_type == BOARD_IS_ACTIVE_MASTER)/*activeÖ÷¿Ø*/
+		  {
+			if(zebrad.vice_board_list == NULL)
+			  {
+				 zlog_debug("%s, line = %d, zebrad.vice_board_list....", __func__, __LINE__);
+				 return 0;
+			  }
+						
+			 for (ALL_LIST_ELEMENTS (zebrad.vice_board_list, node, nnode, master_board)) 
+			  { 
+			  	
+				master_send_set_policy_route ( master_board,is_add,name,ipaddr, port,mask,id);
+			  }
+		   
+		} 
+		 return 1;
+	}
+
 /*delete by gjd*/
 /* Delete static route from static route configuration. */
 #if 0
