@@ -681,6 +681,7 @@ typedef struct vlan_list_distributed{
     char vlanName[21];
 	unsigned int cpu_port_qinq[16];/*to cpu port qinq state*/
     unsigned int bond_slot[16];	
+	unsigned int bond_x86_slot[16];	
     port_bmp_t untagPortBmp[16]; 
 	port_bmp_t tagPortBmp[16];
 	port_bmp_t qinq[16];     /*eth port qinq state*/

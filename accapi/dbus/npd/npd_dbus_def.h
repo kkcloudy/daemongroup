@@ -8706,7 +8706,7 @@ enum npd_dbus_result_no_e {
 #define NPD_DBUS_VLAN_METHOD_BOND_VLAN_TO_SLOT_CPU     "vlan_to_cpu_port_add_del"
 /* check exist interface under special vlan on special slot of distributed system */
 #define NPD_DBUS_VLAN_EXIST_INTERFACE_UNDER_VLAN_TO_SLOT_CPU     "vlan_to_cpu_exist_interface_under_vlan_on_slot"
-
+#define NPD_DBUS_VLAN_METHOD_BOND_VLAN_TO_X86_SLOT   "bond_vlan_to_x86_slot"
 /*Add for L2 and smart_link for had by sunjc@autelan.com*/
 #define VRRP_DBUS_METHOD_L2_UPLINK_ADD_DELETE	"had_l2_uplink_ifname_add_delete"
 #define VRRP_DBUS_METHOD_VIP_BACK_DOWN_FLG_SET  "had_vip_back_flag_set"
