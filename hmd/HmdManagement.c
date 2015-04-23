@@ -848,6 +848,9 @@ void * HMDManagementS(){
 							memset(buf, 0, 128);
 							sprintf(buf,"/opt/bin/vtysh -f %s%d-0-%d -b &",defaultPath,SlotID,InstID);
 							system(buf);
+							memset(buf, 0, 128);
+							sprintf(buf,"sudo load_dhcpsnp.sh %d &",SlotID);
+							system(buf);
 //							memset(buf, 0, 128);
 //							sprintf(buf,"mv /mnt/cli.conf_bak /mnt/cli.conf");
 //							system(buf);
