@@ -1,6 +1,7 @@
 #ifndef __NPD_SYSDEF_H__
 #define __NPD_SYSDEF_H__
 
+#include <config/auteware_config.h>
 
 #define  ASIC_DMA_VIRT_ADDR   0x50000000
 #define  ASIC_CFG_VIRT_ADDR   0x60000000
@@ -681,7 +682,9 @@ typedef struct vlan_list_distributed{
     char vlanName[21];
 	unsigned int cpu_port_qinq[16];/*to cpu port qinq state*/
     unsigned int bond_slot[16];	
+#ifdef __VERSION_2_0_22
 	unsigned int bond_x86_slot[16];	
+#endif
     port_bmp_t untagPortBmp[16]; 
 	port_bmp_t tagPortBmp[16];
 	port_bmp_t qinq[16];     /*eth port qinq state*/
