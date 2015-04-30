@@ -239,6 +239,9 @@ struct eapol_state_machine {
 	size_t eapol_key_sign_len;
 	u8 *eapol_key_crypt;
 	size_t eapol_key_crypt_len;
+	u8 *cui_identity;
+	size_t cui_len;
+	Boolean cuiAvailable ;	
 
 	struct eap_sm *eap;
 

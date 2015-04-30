@@ -584,6 +584,19 @@ int bak_add_sta(struct asd_data *wasd, struct sta_info *sta){
 				memcpy(msg.Bu.U_STA.B_identity, sta->eapol_sm->identity, 127);
 				msg.Bu.U_STA.B_identity_len = 127;
 			}
+
+			
+			msg.Bu.U_STA.B_cui_len = sta->eapol_sm->cui_len;
+			msg.Bu.U_STA.B_cuiAvailable = sta->eapol_sm->cuiAvailable;
+			memset(msg.Bu.U_STA.B_cuiidentity, 0, 128);
+			if(sta->eapol_sm->cuiAvailable&&(sta->eapol_sm->cui_identity!=NULL)){
+				if(msg.Bu.U_STA.B_cui_len < 128)
+					memcpy(msg.Bu.U_STA.B_cuiidentity, sta->eapol_sm->cui_identity, msg.Bu.U_STA.B_cui_len);
+				else{
+					memcpy(msg.Bu.U_STA.B_cuiidentity, sta->eapol_sm->cui_identity, 127);
+					msg.Bu.U_STA.B_cui_len = 127;
+				}
+			}
 			msg.Bu.U_STA.B_acct_session_id_hi = sta->acct_session_id_hi;
 			msg.Bu.U_STA.B_acct_session_id_lo = sta->acct_session_id_lo;
 			msg.Bu.U_STA.B_acct_session_start = sta->acct_session_start;
@@ -872,6 +885,15 @@ void bak_batch_new_station(struct asd_data *wasd, struct sta_info *sta, B_UPDATE
 		memset(sta->eapol_sm->identity, 0, U_STA->B_identity_len+1);
 		memcpy(sta->eapol_sm->identity, U_STA->B_identity, U_STA->B_identity_len);
 	}
+	if(mast_bak_update == 1){
+		sta->eapol_sm->cuiAvailable = U_STA->B_cuiAvailable;
+		sta->eapol_sm->cui_len = U_STA->B_cui_len;
+		sta->eapol_sm->cui_identity = os_zalloc(U_STA->B_cui_len+1);
+		if(sta->eapol_sm->cui_identity!=NULL){
+			memset(sta->eapol_sm->cui_identity, 0,U_STA->B_cui_len+1);
+			memcpy(sta->eapol_sm->cui_identity,U_STA->B_cuiidentity, U_STA->B_cui_len);
+		}
+	}
 	sta->acct_session_id_hi = U_STA->B_acct_session_id_hi;
 	sta->acct_session_id_lo = U_STA->B_acct_session_id_lo;
 	sta->acct_session_start = U_STA->B_acct_session_start;
@@ -939,7 +961,15 @@ void bak_new_station_1x(struct asd_data *wasd, struct sta_info *sta, B_Msg *msg)
 		memset(sta->eapol_sm->identity, 0, msg->Bu.U_STA.B_identity_len+1);
 		memcpy(sta->eapol_sm->identity, msg->Bu.U_STA.B_identity, msg->Bu.U_STA.B_identity_len);
 	}
-	
+	if(mast_bak_update == 1){
+		sta->eapol_sm->cuiAvailable = msg->Bu.U_STA.B_cuiAvailable;
+		sta->eapol_sm->cui_len = msg->Bu.U_STA.B_cui_len;
+		sta->eapol_sm->cui_identity = os_zalloc(msg->Bu.U_STA.B_cui_len+1);
+		if(sta->eapol_sm->cui_identity!=NULL){
+			memset(sta->eapol_sm->cui_identity, 0, msg->Bu.U_STA.B_cui_len+1);
+			memcpy(sta->eapol_sm->cui_identity, msg->Bu.U_STA.B_cuiidentity, msg->Bu.U_STA.B_cui_len);
+		}
+	}
 	sta->acct_session_id_hi = msg->Bu.U_STA.B_acct_session_id_hi;
 	sta->acct_session_id_lo = msg->Bu.U_STA.B_acct_session_id_lo;
 	sta->acct_session_start = msg->Bu.U_STA.B_acct_session_start;

@@ -341,6 +341,15 @@ static struct radius_msg * accounting_msg(struct asd_data *wasd,
 				goto fail;
 			}
 		}
+		val = ieee802_1x_get_radius_cui(sta->eapol_sm,&len);
+		asd_printf(ASD_1X,MSG_DEBUG,"####val=%s\n",val);
+		if(val != NULL){
+			if (!radius_msg_add_attr(msg, RADIUS_ATTR_CHARGREABLE_USER_IDENTITY,
+						 val, len)) {
+				asd_printf(ASD_1X,MSG_DEBUG,"Could not add CUI\n");
+				goto fail;
+			}
+		}
 	}
 
 	return msg;

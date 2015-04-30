@@ -44,6 +44,9 @@ typedef struct {
 	unsigned int ipaddr;
 	unsigned int gifindex;
 	unsigned int total_num;
+	unsigned char B_cuiidentity[128];
+	size_t B_cui_len;
+	Boolean B_cuiAvailable;
 	time_t sta_online_time;//qiuchen add it
 	unsigned int PreBSSIndex;
 	unsigned char PreBSSID[MAC_LEN];

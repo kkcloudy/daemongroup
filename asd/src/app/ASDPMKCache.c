@@ -96,6 +96,7 @@ static void _pmksa_cache_free_entry(struct rsn_pmksa_cache_entry *entry)
 	if (entry == NULL)
 		return;
 	os_free(entry->identity);
+	os_free(entry->cui_identity);
 	ieee802_1x_free_radius_class(&entry->radius_class);
 	os_free(entry);
 }
@@ -195,7 +196,14 @@ static void pmksa_cache_from_eapol_data(struct rsn_pmksa_cache_entry *entry,
 				  eapol->identity_len);
 		}
 	}
-
+    if(eapol->cuiAvailable&&eapol->cui_identity)
+	{
+		entry->cui_identity = os_zalloc(eapol->cui_len);
+		if(entry->cui_identity){
+			entry->cui_len = eapol->cui_len;
+			os_memcpy(entry->cui_identity,eapol->cui_identity,eapol->cui_len);
+		}
+	}
 	ieee802_1x_copy_radius_class(&entry->radius_class,
 				     &eapol->radius_class);
 
@@ -221,7 +229,15 @@ void pmksa_cache_to_eapol_data(struct rsn_pmksa_cache_entry *entry,
 		wpa_hexdump_ascii(MSG_DEBUG, "STA identity from PMKSA",
 				  eapol->identity, eapol->identity_len);
 	}
-
+    if(entry->cui_identity){
+		os_free(eapol->cui_identity);
+		eapol->cui_identity = os_zalloc(entry->cui_len);
+		if(eapol->cui_identity){
+			eapol->cui_len = entry->cui_len;
+			os_memcpy(eapol->cui_identity,entry->cui_identity,entry->cui_len);
+			eapol->cuiAvailable = TRUE;
+		}
+	}
 	ieee802_1x_free_radius_class(&eapol->radius_class);
 	ieee802_1x_copy_radius_class(&eapol->radius_class,
 				     &entry->radius_class);

@@ -570,6 +570,8 @@ static void ieee802_1x_encapsulate_radius(struct asd_data *wasd,
 	unsigned char SID = wasd->SecurityID;
 	unsigned int wtpid;
 	struct radius_client_info *client_info;
+	u8 *val = NULL;
+	size_t val_len;
 	if (sm == NULL){
 		asd_printf(ASD_1X,MSG_DEBUG, "sm is null in %s\n",__func__);
 		return;
@@ -664,6 +666,23 @@ static void ieee802_1x_encapsulate_radius(struct asd_data *wasd,
 		}
 	}
 	//		
+	val = ieee802_1x_get_radius_cui(sta->eapol_sm,&val_len);
+	if(val == NULL)
+	{
+		val_len = 1;
+		val = malloc(val_len);
+		if(val == NULL)
+		{
+			asd_printf(ASD_1X,MSG_DEBUG,"val malloc failed!\n");
+			return;
+		}
+		memset(val,0,val_len);
+	}
+	if (!radius_msg_add_attr(msg, RADIUS_ATTR_CHARGREABLE_USER_IDENTITY,
+				 (u8 *) val, val_len)) {
+		asd_printf(ASD_1X,MSG_DEBUG,"Could not add CUI\n");
+		goto fail;
+	}
 	if (wasd->conf->own_ip_addr.af == AF_INET &&
 	    !radius_msg_add_attr(msg, RADIUS_ATTR_NAS_IP_ADDRESS,
 				 (u8 *) &wasd->conf->own_ip_addr.u.v4, 4)) {
@@ -1233,7 +1252,7 @@ void ieee802_1x_new_station(struct asd_data *wasd, struct sta_info *sta)
 	sta->eapol_sm->eap_if->portEnabled = TRUE;
 	sta->alive_flag = 0;							//weichao add 2011.09.23
 	sta->alive_total = 0;							//weichao add 2011.09.23
-
+    sta->eapol_sm->cuiAvailable = FALSE; 
 	pmksa = wpa_auth_sta_get_pmksa(sta->wpa_sm);
 
 	//mahz add 2011.7.11
@@ -1350,6 +1369,7 @@ void ieee802_1x_free_station(struct sta_info *sta)
 	}
 
 	os_free(sm->identity);
+	os_free(sm->cui_identity);
 	ieee802_1x_free_radius_class(&sm->radius_class);
 	eapol_auth_free(sm);
 }
@@ -1608,6 +1628,43 @@ static void ieee802_1x_store_radius_class(struct asd_data *wasd,
 		asd_printf(ASD_1X,MSG_DEBUG,"sta->sta_send_traffic_limit = %d\n",sta->sta_send_traffic_limit);
 		AsdStaInfoToWID(wasd, sta->addr, RADIUS_STA_UPDATE);
 	}
+}
+
+static void ieee802_1x_store_radius_cui(struct asd_data *wasd,
+					  struct sta_info *sta,
+					  struct radius_msg *msg)
+{
+	size_t cui_len  = 0;
+	int count = 0;
+	u8 *buf,*cui_identity;
+	struct eapol_state_machine *sm = sta->eapol_sm;
+	unsigned char wlanid = wasd->WlanID;
+	if (!ASD_WLAN[wlanid] || !ASD_WLAN[wlanid]->radius_server || !ASD_WLAN[wlanid]->radius_server->acct_server || 
+	    !sta || sta->eapol_sm == NULL)
+	    return;
+	count = radius_msg_count_attr(msg, RADIUS_ATTR_CHARGREABLE_USER_IDENTITY, 1);
+	if(count <= 0)
+	{
+		sm->cuiAvailable = FALSE;
+		return;
+	}
+
+	if (radius_msg_get_attr_ptr(msg, RADIUS_ATTR_CHARGREABLE_USER_IDENTITY,
+						   &buf, &cui_len,
+					            buf) < 0) {			
+		return ;
+	}
+	sm->cuiAvailable = TRUE;
+	cui_identity = os_zalloc(cui_len + 1);
+	if(cui_identity == NULL){
+		return ;
+	}
+	memset(cui_identity,0,(cui_len+1));
+	memcpy(cui_identity,buf,cui_len);
+	cui_identity[cui_len] = '\0';
+	os_free(sm->cui_identity);
+	sm->cui_identity = cui_identity;
+	sm->cui_len = cui_len;
 }
 
 
@@ -1873,6 +1930,7 @@ ieee802_1x_receive_auth(struct radius_msg *msg, struct radius_msg *req,
 		ieee802_1x_get_keys(wasd, sta, msg, req, shared_secret,
 				    shared_secret_len);
 		ieee802_1x_store_radius_class(wasd, sta, msg);
+		ieee802_1x_store_radius_cui(wasd,sta,msg);
 		ieee802_1x_update_sta_identity(wasd, sta, msg);
 		if (sm->eap_if->eapKeyAvailable && sm->eapol_key_crypt &&
 		    wpa_auth_pmksa_add(sta->wpa_sm, sm->eapol_key_crypt,
@@ -2412,6 +2470,13 @@ u8 * ieee802_1x_get_radius_class(struct eapol_state_machine *sm, size_t *len,
 	return sm->radius_class.attr[idx].data;
 }
 
+u8 * ieee802_1x_get_radius_cui(struct eapol_state_machine *sm, size_t *len)
+{
+	if((sm == NULL)||(sm->cuiAvailable == FALSE))
+		return NULL;
+	*len = sm->cui_len;
+	return sm->cui_identity;
+}
 
 const u8 * ieee802_1x_get_key(struct eapol_state_machine *sm, size_t *len)
 {
