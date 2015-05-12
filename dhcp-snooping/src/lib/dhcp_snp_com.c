@@ -4854,6 +4854,8 @@ DBusMessage *dhcp_snp_dbus_config_intf
 			if(DHCP_SNP_ENABLE == status ) {/* enable */
 				if (DHCP_SNP_RETURN_CODE_OK == ret) {
 					syslog_ax_dhcp_snp_err("interface %s already enabled dhcp snooping!\n", ifname);
+					ret = dhcp_snp_listener_close(ifname);
+					ret = dhcp_snp_listener_open(ifname);
 					ret = DHCP_SNP_RETURN_CODE_EN_INTF;
 				}
 				else if (DHCP_SNP_RETURN_CODE_NOT_FOUND == ret)
