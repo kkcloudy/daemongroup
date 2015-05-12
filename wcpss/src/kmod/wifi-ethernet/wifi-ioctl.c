@@ -245,7 +245,7 @@ int dynamic_unregiste_if(struct interface_basic_INFO *if_info)
 		//wifi_bssid_bssidx_tbl_del(priv->bssid);    /*ht del for local bss use*/		
 		struct net_device * device = wifi_device[vrid][index];
 		wifi_device[vrid][index] = NULL;
-		while (atomic_read(&dev->refcnt) != 0) {
+		while (atomic_read(&dev->refcnt) != 1) {
 			printk("interface  %s reference count unequal to 0\n",if_info->if_name);
 			dev_refcnt_decrement(&dev->refcnt);
 			}
