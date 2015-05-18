@@ -1668,7 +1668,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 					{
 						if(id != 0)
 						{
-							wid_syslog_debug_debug(WID_DEFAULT,"wtp have index,change wtp info,and wait wtp login next time\n");
+							wid_syslog_debug_debug(WID_DEFAULT,"wtp have index%d,change wtp info,and wait wtp login next time\n",id);
 							wid_dynamic_change_wtp_info(id,auto_ap_info2);
 							WidDestroyAutoApLoginInfo(auto_ap_info2);
 							WidDestroyJoinRequestValuesForAutoApLogin(&joinRequest);
@@ -1723,8 +1723,8 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 								)
 								{
 									//if(AC_WTP[i]->WTPStat == 7)
-									CWAddAC_ATTACH_For_Auto(addrPtr, i);
-									wid_syslog_err("wtp mac has already be used\n");
+									CWAddAC_ATTACH_For_Auto(addrPtr, i, (unsigned char*)mac);
+									wid_syslog_err("wtp mac has already be wtp%d used\n",i);
 									CW_FREE_OBJECT_WID(mac);
 									WidDestroyAutoApLoginInfo(auto_ap_info2);	
 									WidDestroyJoinRequestValuesForAutoApLogin(&joinRequest);
@@ -1768,7 +1768,7 @@ void CWACManageIncomingPacket(CWSocket sock, char *buf, int readBytes, int incom
 								{
 									//send to asd
 									
-									CWAddAC_ATTACH_For_Auto(addrPtr, wtp_index);
+									CWAddAC_ATTACH_For_Auto(addrPtr, wtp_index, (unsigned char*)mac);
 									AsdWsm_WTPOp(wtp_index,WID_ADD);
 									//printf("auto wtp %d create successfully\n",wtp_index);
 									wid_syslog_debug_debug(WID_DEFAULT,"auto wtp %d create successfully\n",wtp_index);

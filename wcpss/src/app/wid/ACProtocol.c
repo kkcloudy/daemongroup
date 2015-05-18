@@ -2824,6 +2824,8 @@ int CWCmpWTPAttach(CWNetworkLev4Address *addrPtr){
 		if(AC_ATTACH[i] != NULL && (&(AC_ATTACH[i]->address) != NULL) &&
 					!sock_cmp_addr((struct sockaddr*)addrPtr, (struct sockaddr*)&(AC_ATTACH[i]->address), sizeof(CWNetworkLev4Address))) { 
 			ret = AC_ATTACH[i]->WTPID;
+			CWUseSockNtop(addrPtr, wid_syslog_debug_debug(WID_WTPINFO,"CWCmpWTPAttach: AC_ATTACH[%d] match %s\n", i,str););
+			wid_syslog_debug_debug(WID_WTPINFO,"CWCmpWTPAttach: ret is %d\n", ret);
 			if(!check_wtpid_func(ret)){
 				wid_syslog_err("%s\n",__func__);
 				return -1;
@@ -2831,10 +2833,12 @@ int CWCmpWTPAttach(CWNetworkLev4Address *addrPtr){
 			}
 			if((AC_WTP[ret]==NULL)||((AC_WTP[ret]!=NULL)&&(AC_WTP[ret]->WTPStat != 7)))
 			{
+				wid_syslog_debug_debug(WID_WTPINFO,"CWCmpWTPAttach: free AC_ATTACH[%d] continue\n", i);
 				WID_FREE(AC_ATTACH[i]);
 				AC_ATTACH[i] = NULL;
 				continue;
 			}
+			wid_syslog_debug_debug(WID_WTPINFO,"CWCmpWTPAttach: free AC_ATTACH[%d]\n", i);
 			WID_FREE(AC_ATTACH[i]);
 			AC_ATTACH[i] = NULL;
 			return ret;
@@ -2853,10 +2857,42 @@ CWBool CWDisCheckWTPBoardData(int bindingSystemIndex,CWNetworkLev4Address *addrP
 		if(AC_ATTACH[i1] != NULL && (&(AC_ATTACH[i1]->address) != NULL) &&
 					!sock_cmp_addr((struct sockaddr*)addrPtr, (struct sockaddr*)&(AC_ATTACH[i1]->address), sizeof(CWNetworkLev4Address))) { 
 			*WTPID = AC_ATTACH[i1]->WTPID;
+			CWUseSockNtop(addrPtr, wid_syslog_debug_debug(WID_WTPINFO,"CWDisCheckWTPBoardData: AC_ATTACH[%d] match %s\n", i1,str););
+
 			return CW_TRUE;
 		}
 	}
-			
+
+	
+	int n = 0, k = 0;
+	unsigned char mac[MAC_LEN] = {0};
+	unsigned char zero[MAC_LEN] = {0};
+	//CWTimerID id = 0;
+	
+	for(n = 0; n < valPtr->vendorInfosCount; n++)
+	{
+		if((valPtr->vendorInfos)[n].type == CW_BOARD_MAC_ADDRESS)
+		{
+			memcpy(mac, (valPtr->vendorInfos)[n].mac, MAC_LEN); 
+			break;
+		}
+	}
+    
+	if(0 != memcmp(zero, mac, MAC_LEN))
+	{
+		for(k = 0; k < WTP_NUM; k++)
+		{
+			if(AC_ATTACH[k] != NULL)
+			{
+				if(0 == memcmp(AC_ATTACH[k]->wtp_mac, mac, MAC_LEN))
+				{
+					CW_FREE_OBJECT(AC_ATTACH[k]);
+					wid_syslog_debug_debug(WID_WTPINFO,"CWDisCheckWTPBoardData: free redundant AC_ATTACH[%d]  it's mac: "MACSTR"%s\n", k, MAC2STR(mac));
+				}
+			}
+		}
+	}
+	
 	while(i<WTP_NUM){
 		CWThreadMutexLock(&(gWTPs[i].WTPThreadMutex));
 		if((AC_WTP[i] != NULL)&&(AC_WTP[i]->isused == 1)){
@@ -2879,6 +2915,7 @@ CWBool CWDisCheckWTPBoardData(int bindingSystemIndex,CWNetworkLev4Address *addrP
 						}
 						AC_ATTACH[j]->WTPID = i;						
 						CW_COPY_NET_ADDR_PTR(&(AC_ATTACH[j]->address), addrPtr);
+						memcpy(AC_ATTACH[j]->wtp_mac, mac, MAC_LEN);
 						*WTPID = i;
 						CWThreadMutexUnlock(&(gWTPs[i].WTPThreadMutex));	
 						return CW_TRUE;
@@ -2901,12 +2938,13 @@ CWBool CWDisCheckWTPBoardData(int bindingSystemIndex,CWNetworkLev4Address *addrP
 
 }
 
-CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID)
+CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID,unsigned char *mac)
 {
 	int j = 0, i1 = 0;	
 	for(i1 = 0; i1 < WTP_NUM; i1++) {
 		if(AC_ATTACH[i1] != NULL && (&(AC_ATTACH[i1]->address) != NULL) &&
 					!sock_cmp_addr((struct sockaddr*)addrPtr, (struct sockaddr*)&(AC_ATTACH[i1]->address), sizeof(CWNetworkLev4Address))) { 
+                                CWUseSockNtop(addrPtr, wid_syslog_debug_debug(WID_WTPINFO,"CWAddAC_ATTACH_For_Auto: AC_ATTACH[%d] match %s\n", i1,str););
 			return CW_TRUE;
 		}
 	}
@@ -2927,6 +2965,8 @@ CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID
 				}
 				AC_ATTACH[j]->WTPID = WTPID;						
 				CW_COPY_NET_ADDR_PTR(&(AC_ATTACH[j]->address), addrPtr);	
+				memcpy(AC_ATTACH[j]->wtp_mac, mac, MAC_LEN); 
+				wid_syslog_debug_debug(WID_WTPINFO,"CWAddAC_ATTACH_For_Auto: AC_ATTACH[%d] add wtp  %d\n", j,WTPID);
 				return CW_TRUE;
 			}
 			j++;

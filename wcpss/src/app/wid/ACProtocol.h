@@ -215,7 +215,7 @@ CWBool CWParseWTPBoardData(CWProtocolMessage *msgPtr, int len, CWWTPVendorInfos 
 CWBool CWCheckWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr);
 CWBool CWCheckRunWTPBoardData(int WTPIndex, CWWTPVendorInfos *valPtr);
 CWBool CWDisCheckWTPBoardData(int bindingSystemIndex,CWNetworkLev4Address *addrPtr, CWWTPVendorInfos *valPtr, unsigned int *WTPID);
-CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID);
+CWBool CWAddAC_ATTACH_For_Auto(CWNetworkLev4Address *addrPtr, unsigned int WTPID,unsigned char *mac);
 CWBool CWWTPMatchBindingInterface(int wtpid,int bindingSystemIndex);
 int CWCmpWTPAttach(CWNetworkLev4Address *addrPtr);
 CWBool CWParseWTPDescriptor(CWProtocolMessage *msgPtr, int len, CWWTPDescriptor *valPtr);				//37 

@@ -121,6 +121,7 @@ typedef struct {
 typedef struct {			
 	CWNetworkLev4Address address;
 	unsigned int WTPID;	
+	unsigned char wtp_mac[MAC_LEN];
 }CWWTPAttach;
 
 typedef struct {
