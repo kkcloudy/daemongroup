@@ -22,7 +22,7 @@ updatebuildno_22:
 	@if [ -d .git ] ; then \
 		git pull ; \
 		git add ${BUILDNO_FILE_L_22} ; \
-		git commit -m "Increased buildno to `cat ${BUILDNO_FILE_L_22}`" ; \
+		git commit -m "Increased 2.0.22 buildno to `cat ${BUILDNO_FILE_L_22}`" ; \
 		git push ; \
 	else \
 		cvs commit -m "Build `cat ${BUILDNO_FILE_L_22}` was performed." ${BUILDNO_FILE_L_22} ; \
