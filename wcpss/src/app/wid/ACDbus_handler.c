@@ -18857,6 +18857,7 @@ int WID_INTERFACE_SET_NASID(unsigned char WlanID,char* ifname,char* nas_id)
 		wid_syslog_debug_debug(WID_DEFAULT,"** wlan binding if wlan id:%d ifname :%s sysindex:%d**\n",WlanID,ifname,wif->ifi_index);
 		AC_WLAN[WlanID]->Wlan_Ifi = wif ;
 		AC_WLAN[WlanID]->Wlan_Ifi->ifi_next = NULL;
+		WID_CHECK_WLAN_APPLY_WTP_BSS_NAS_ID(WlanID, wif->ifi_index, wif->nas_id_len, nas_id);
 	}else{
 
 		wifnext = AC_WLAN[WlanID]->Wlan_Ifi;
