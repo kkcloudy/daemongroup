@@ -64,12 +64,6 @@ struct oct_dev_s {
 	struct cdev cdev;
 };
 
-int dev_refcnt_decrement(atomic_t *v)
-{
-	v->counter -= 1;
-
-	return 0;
-}
 
 
 int dynamic_registe_if(struct interface_basic_INFO *if_info)
@@ -245,10 +239,6 @@ int dynamic_unregiste_if(struct interface_basic_INFO *if_info)
 		//wifi_bssid_bssidx_tbl_del(priv->bssid);    /*ht del for local bss use*/		
 		struct net_device * device = wifi_device[vrid][index];
 		wifi_device[vrid][index] = NULL;
-		while (atomic_read(&dev->refcnt) != 1) {
-			printk("interface  %s reference count unequal to 0\n",if_info->if_name);
-			dev_refcnt_decrement(&dev->refcnt);
-			}
 		unregister_netdev(device);
 		free_netdev(device);
 		//kfree(device);
