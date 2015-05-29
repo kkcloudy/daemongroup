@@ -1884,6 +1884,8 @@ static int had_ipaddr_ops
 	int	i = 0, err	= 0;
 	struct in_addr in;
 	int uplink_ifidx = 0,downlink_ifidx = 0;
+	unsigned int	addr[1024] = {0};
+	int naddr = 0;
 
 	if (!vsrv) {
 		vrrp_syslog_error("modify(%s) interface ip with null pointer error!\n",  \
@@ -1929,6 +1931,40 @@ static int had_ipaddr_ops
 								vadd->addr,
 								uplink_ifidx);
 				vadd->deletable = 1;
+			}
+			if(addF == 1)
+			{
+			    naddr = had_ipaddr_list( uplink_ifidx,addr,sizeof(addr)/sizeof(addr[0]) );
+			    for( i = 0; i < naddr; i++ ){
+                    if(vadd->addr == addr[i]){
+			            break;
+           	        }
+		        }
+		        if(i == naddr){
+			        vrrp_syslog_error("add uplink ip %d.%d.%d.%d ifindex %d failed!\n",
+								    ( vadd->addr >> 24) & 0xFF,
+								    (vadd->addr >> 16) & 0xFF,
+								    (vadd->addr >> 8) & 0xFF,
+								    (vadd->addr) & 0xFF,
+								     uplink_ifidx);
+					if (had_ipaddr_op(uplink_ifidx, vadd->addr, vadd->mask, addF))
+			        {
+				        err = 1;
+				        vadd->deletable = 0;
+				        in.s_addr = htonl(vadd->addr);
+				        vrrp_syslog_error("cannot %s the address %#x to %s\n"
+								        , addF ? "set" : "remove"
+								        , in.s_addr
+								        , vsrv->uplink_vif[i].ifname ? vsrv->uplink_vif[i].ifname : "nil");
+			        }else
+			        {
+				        vrrp_syslog_dbg("%s uplink ip %#x to ifindex %d success!\n",
+								        addF ? "add" : "delete",
+								        vadd->addr,
+								        uplink_ifidx);
+				        vadd->deletable = 1;
+			        }	
+		        }
 			}
 		}
 
@@ -2050,6 +2086,40 @@ static int had_ipaddr_ops
 								vadd->addr,
 								downlink_ifidx);
 				vadd->deletable = 1;
+			}
+			if(addF == 1)
+			{
+			    naddr = had_ipaddr_list( downlink_ifidx,addr,sizeof(addr)/sizeof(addr[0]) );
+			    for( i = 0; i < naddr; i++ ){
+                    if(vadd->addr == addr[i]){
+			            break;
+           	        }
+		        }
+		        if(i == naddr){
+			        vrrp_syslog_error("add downlink ip %d.%d.%d.%d ifindex %d failed!\n",
+								    ( vadd->addr >> 24) & 0xFF,
+								    (vadd->addr >> 16) & 0xFF,
+								    (vadd->addr >> 8) & 0xFF,
+								    (vadd->addr) & 0xFF,
+								     downlink_ifidx);
+					if (had_ipaddr_op(downlink_ifidx, vadd->addr, vadd->mask, addF))
+			        {
+				        err = 1;
+				        vadd->deletable = 0;
+				        in.s_addr = htonl(vadd->addr);
+				        vrrp_syslog_error("cannot %s the address %#x to %s\n"
+								        , addF ? "set" : "remove"
+								        , in.s_addr
+								        , vsrv->downlink_vif[i].ifname ? vsrv->downlink_vif[i].ifname : "nil");
+			        }else
+			        {
+				        vrrp_syslog_dbg("%s downlink ip %#x to ifindex %d success!\n",
+								        addF ? "add" : "delete",
+								        vadd->addr,
+								        downlink_ifidx);
+				        vadd->deletable = 1;
+			        }
+		        }
 			}
 		}
 
