@@ -29657,6 +29657,7 @@ DBusMessage *asd_dbus_security_show_running_config(DBusConnection *conn, DBusMes
 					if(SECURITY[i]->eap_auth_to_radius_acct_session_id_enable == 1){	//	xm0701
 						totalLen += sprintf(cursor," set eap-auth-to-radius acct-session-id enable\n");
 						cursor = showStr + totalLen;
+					}
 					if(SECURITY[i]->eap_auth_to_radius_acct_session_id_format == 1){	//	xm0701
 						totalLen += sprintf(cursor," set eap-auth-to-radius acct-session-id format enable\n");
 						cursor = showStr + totalLen;
