@@ -486,7 +486,10 @@ void accounting_sta_start(struct asd_data *wasd, struct sta_info *sta)
 			       wasd, sta);
 	/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
 	if (ASD_SECURITY[wasd->SecurityID]->eap_auth_to_radius_acct_session_id_enable == 0) {
-		accounting_get_session_id(sta);
+		if(ASD_SECURITY[wasd->SecurityID]->eap_auth_to_radius_acct_session_id_format == 0)
+		    accounting_set_seesion_id(sta);
+		else
+			accounting_get_session_id(sta);
 	}
 	/* end */
 	sta->acct_session_started = 1;
@@ -653,6 +656,13 @@ void accounting_get_session_id(struct sta_info *sta)
 		ACCT_SESSION_ID_HI++;
 	}
 	sta->acct_session_id_hi = ACCT_SESSION_ID_HI;
+}
+void accounting_set_seesion_id(struct sta_info *sta)
+{
+    time_t time_now = 0; 
+	time_now = time(NULL);
+	sta->acct_session_id_lo = (u32)sta->add_time;
+	sta->acct_session_id_hi =(u32)time_now;
 }
 void accounting_sta_get_id(struct asd_data *wasd, struct sta_info *sta)
 {

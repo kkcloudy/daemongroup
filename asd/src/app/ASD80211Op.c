@@ -2502,7 +2502,10 @@ static void handle_assoc(struct asd_data *wasd,
 		accounting_sta_stop(wasd, sta);
 		/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
 		if (ASD_SECURITY[SID]->eap_auth_to_radius_acct_session_id_enable == 1) {
-			accounting_get_session_id(sta);
+			if(ASD_SECURITY[SID]->eap_auth_to_radius_acct_session_id_format == 0)
+			    accounting_set_seesion_id(sta);
+			else
+				accounting_get_session_id(sta);
 		}
 		if (reassoc)
 			mlme_reassociate_indication(wasd, sta);

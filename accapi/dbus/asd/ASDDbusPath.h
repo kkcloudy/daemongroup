@@ -162,6 +162,7 @@ char ASD_DBUS_SECURITY_METHOD_SECONDARY_SET_RADIUS_HEART_TEST_ON_OFF[PATH_LEN]= 
 
 /* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
 char ASD_DBUS_SECURITY_METHOD_SET_EAP_AUTH_TO_RADIUS_ACCT_SESSION_ID_ENABLE_DISABLE[PATH_LEN]= "asd_dbus_set_eap_auth_to_radius_acct_session_id_enable_disable";
+char ASD_DBUS_SECURITY_METHOD_SET_EAP_AUTH_TO_RADIUS_ACCT_SESSION_ID_FORMAT[PATH_LEN]= "asd_dbus_set_eap_auth_to_radius_acct_session_id_format";
 
 char ASD_DBUS_SECURITY_METHOD_ASD_SOCKET_OPERATE[PATH_LEN]= "asd_socket_operate";	//mahz add 2011.10.17
 

@@ -36,6 +36,7 @@ void accounting_sta_start(struct asd_data *wasd, struct sta_info *sta);
 void accounting_sta_interim(struct asd_data *wasd, struct sta_info *sta);
 void accounting_sta_stop(struct asd_data *wasd, struct sta_info *sta);
 void accounting_get_session_id(struct sta_info *sta);
+void accounting_set_seesion_id(struct sta_info *sta);
 void accounting_sta_get_id(struct asd_data *wasd, struct sta_info *sta);
 int accounting_init(const int  wlanid);
 void accounting_deinit(struct asd_data *wasd);

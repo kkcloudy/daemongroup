@@ -11390,6 +11390,109 @@ DEFUN(set_eap_auth_to_radius_acct_session_id_enable_disable_cmd_func,
 
 }
 
+DEFUN(set_eap_auth_to_radius_acct_session_id_format_cmd_func,
+	  set_eap_auth_to_radius_acct_session_id_format_cmd,
+	  "set eap-auth-to-radius acct-session-id format (enable|disable)",
+	  "Setting Configuration.\n"
+	  "Eap-auth with radius\n"
+	  "Acct-Session-ID format in radius Access-Request packet\n"
+	  "Default disable\n"
+	 )
+{
+	int ret;
+	unsigned char security_id;
+	DBusMessage *query, *reply; 
+	DBusMessageIter  iter;
+	DBusError err;
+	
+	unsigned char AcctSessionIDFormat=0;
+
+	//security_id = (int)vty->index;
+	if ((!strcmp(argv[0],"enable")))
+		AcctSessionIDFormat = 1;			
+	else if ((!strcmp(argv[0],"disable")))
+		AcctSessionIDFormat = 0;	
+	else 
+	{		
+		vty_out(vty,"<error> should be enable or disable.\n");
+		return CMD_SUCCESS;
+	}
+	
+	int localid = 1;
+	int slot_id = HostSlotId;
+	int index = 0;
+	char BUSNAME[PATH_LEN];
+	char OBJPATH[PATH_LEN];
+	char INTERFACE[PATH_LEN];
+	if(vty->node == SECURITY_NODE){
+		index = 0;
+		security_id = (int)vty->index;	
+	}else if(vty->node == HANSI_SECURITY_NODE){
+		index = vty->index;  
+		security_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_NODE){
+		index = vty->index;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}else if (vty->node == LOCAL_HANSI_SECURITY_NODE){
+		index = vty->index;
+		security_id = (int)vty->index_sub;
+		localid = vty->local;
+		slot_id = vty->slotindex;
+	}
+
+	DBusConnection *dcli_dbus_connection = NULL;
+	ReInitDbusConnection(&dcli_dbus_connection,slot_id,distributFag);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_BUSNAME,BUSNAME);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_SECURITY_OBJPATH,OBJPATH);
+	ReInitDbusPath_V2(localid,index,ASD_DBUS_SECURITY_INTERFACE,INTERFACE);
+	query = dbus_message_new_method_call(BUSNAME,OBJPATH,INTERFACE,ASD_DBUS_SECURITY_METHOD_SET_EAP_AUTH_TO_RADIUS_ACCT_SESSION_ID_FORMAT);
+
+
+	dbus_error_init(&err);
+
+	dbus_message_append_args(query,
+						 DBUS_TYPE_BYTE,&security_id,
+						 DBUS_TYPE_BYTE,&AcctSessionIDFormat,
+						 DBUS_TYPE_INVALID);
+
+	reply = dbus_connection_send_with_reply_and_block (dcli_dbus_connection,query,-1, &err);
+
+	dbus_message_unref(query);
+
+	if (NULL == reply)
+		{
+			cli_syslog_info("<error> failed get reply.\n");
+			if (dbus_error_is_set(&err)) 
+				{
+					cli_syslog_info("%s raised: %s",err.name,err.message);
+					dbus_error_free_for_dcli(&err);
+				}
+			return CMD_SUCCESS;
+		}
+
+	dbus_message_iter_init(reply,&iter);
+	dbus_message_iter_get_basic(&iter,&ret);
+
+	if(ret == ASD_DBUS_SUCCESS)
+		vty_out(vty,"security Acct-Session-ID format set successfully\n");
+	else if(ret == ASD_SECURITY_NOT_EXIST)			
+		vty_out(vty,"<error> security profile does not exist.\n");	
+	else if(ret == ASD_SECURITY_WLAN_SHOULD_BE_DISABLE) 		
+		vty_out(vty,"<error> This Security Profile be used by some Wlans,please disable them first\n");
+	else if(ret == ASD_SECURITY_TYPE_NOT_MATCH_ENCRYPTION_TYPE) 		
+		vty_out(vty,"<error> Can't set Acct-Session-ID under current security type.\n");
+	else
+		vty_out(vty,"<error>  %d\n",ret);
+	
+	dbus_message_unref(reply);
+	
+	return CMD_SUCCESS;
+
+}
+
 int parse_double_PERCENT(char *str,double *percent){
 	char *endptr = NULL;
 	char c;
@@ -11836,6 +11939,7 @@ void dcli_security_init(void) {
 
 	/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
 	install_element(HANSI_SECURITY_NODE,&set_eap_auth_to_radius_acct_session_id_enable_disable_cmd);
+	install_element(HANSI_SECURITY_NODE,&set_eap_auth_to_radius_acct_session_id_format_cmd);
 	/* end */
 	
 	/*-----------------------------------------LOCAL_HANSI_NODE--------------------------------------------------*/
@@ -11939,6 +12043,8 @@ void dcli_security_init(void) {
 
 	/* caojia add for eap radius auth packet with acct_session_id, 2014/4/1 */
 	install_element(LOCAL_HANSI_SECURITY_NODE,&set_eap_auth_to_radius_acct_session_id_enable_disable_cmd);
+	install_element(LOCAL_HANSI_SECURITY_NODE,&set_eap_auth_to_radius_acct_session_id_format_cmd);
+
 	/* end */
 	return;
 }
