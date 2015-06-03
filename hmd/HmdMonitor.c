@@ -2043,6 +2043,14 @@ int hansi_state_check(int InstID, int islocaled, enum hmd_reload_type type){
 			if (HMD_RELOAD_MOD_EAG == type) {
 				hmd_syslog_warning("reload eag %s %d\n", __FUNCTION__, __LINE__);
 				flush_hansi_rule(islocaled, InstID);
+				memset(buf, 0, 128);
+		            	sprintf(buf,"sudo /usr/bin/clear_iptable.sh %d %s 4", InstID,(islocaled==1)?"L":"R");
+				hmd_syslog_info("#########   %s\n",buf);
+			            system(buf);
+				memset(buf, 0, 128);
+		            	sprintf(buf,"sudo /usr/bin/clear_iptable.sh %d %s 6", InstID,(islocaled==1)?"L":"R");
+				hmd_syslog_info("#########   %s\n",buf);
+			            system(buf);
 				hmd_eag_reload(HOST_SLOT_NO, islocaled, InstID);
 			}
 			else if (HMD_RELOAD_MOD_RDC == type) {
