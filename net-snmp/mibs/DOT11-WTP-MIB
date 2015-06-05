@@ -153,7 +153,9 @@ Dot11WtpInfoEntry ::=SEQUENCE{
 	wtplatitude				DisplayString,
 	wtpPowerType				DisplayString,
 	wtpManufactureDate			DisplayString,
-	wtpForwardMode				INTEGER
+	wtpForwardMode				INTEGER,
+	wtpCodeVersionInfo			DisplayString
+
 }
 
 wtpMacAddr 				OBJECT-TYPE
@@ -337,7 +339,13 @@ wtpForwardMode	 			OBJECT-TYPE
 				        	"AP device's ForwardMode."
 					::= { dot11WtpInfoEntry 21 }
 					
-
+wtpCodeVersionInfo	 			OBJECT-TYPE
+					SYNTAX     DisplayString 
+					MAX-ACCESS read-only
+					STATUS     current
+					DESCRIPTION
+				        	"The code version of the AP device."
+					::= { dot11WtpInfoEntry 22 }
 
 
 dot11WtpSignalTable OBJECT-TYPE

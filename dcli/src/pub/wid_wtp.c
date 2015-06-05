@@ -4733,6 +4733,7 @@ void dcli_free_WtpBasicInfo(struct WtpBasicInfo *WtpNode)
 		DCLI_FORMIB_FREE_OBJECT(tmp->longitude);
 		DCLI_FORMIB_FREE_OBJECT(tmp->latitude);
 		DCLI_FORMIB_FREE_OBJECT(tmp->manufacture_date);
+		DCLI_FORMIB_FREE_OBJECT(tmp->wtpCodeVersionInfo);
 		tmp->next = NULL;
 		free(tmp);
 		tmp = NULL;
@@ -7169,7 +7170,8 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 	char *longitude = NULL;
 	char *latitude = NULL;
 	char *manufacture_date = NULL;
-	
+	char *wtpCodeVersionInfo= NULL;
+
 	char BUSNAME[PATH_LEN];
 	char OBJPATH[PATH_LEN];
 	char INTERFACE[PATH_LEN];
@@ -7313,6 +7315,8 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 				dbus_message_iter_next(&iter_struct);
 				dbus_message_iter_get_basic(&iter_struct, &(WtpNode->forward_mode));
 
+				dbus_message_iter_next(&iter_struct);	
+				dbus_message_iter_get_basic(&iter_struct,&(wtpCodeVersionInfo));
 				if(WtpNode->wtpOnlineTime == 0)
 					WtpNode->wtpUpTime =0;
 				else 
@@ -7388,7 +7392,10 @@ struct WtpBasicInfo* show_basic_info_of_all_wtp(int index,int localid,DBusConnec
 				memset(WtpNode->manufacture_date, 0, strlen(manufacture_date)+1);
 				memcpy(WtpNode->manufacture_date, manufacture_date, strlen(manufacture_date));
 
-								
+			
+				WtpNode->wtpCodeVersionInfo = (char*)malloc(strlen(wtpCodeVersionInfo)+1);
+				memset(WtpNode->wtpCodeVersionInfo, 0, strlen(wtpCodeVersionInfo)+1);
+				memcpy(WtpNode->wtpCodeVersionInfo, wtpCodeVersionInfo, strlen(wtpCodeVersionInfo));
 				dbus_message_iter_next(&iter_array);
 	
 			}

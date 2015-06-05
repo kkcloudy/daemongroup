@@ -4349,7 +4349,7 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
     											DBUS_TYPE_BYTE_AS_STRING
     											DBUS_TYPE_STRING_AS_STRING
     											DBUS_TYPE_BYTE_AS_STRING
-    											
+                                                DBUS_TYPE_STRING_AS_STRING
     									DBUS_STRUCT_END_CHAR_AS_STRING,
     									&iter_array);
 
@@ -4653,8 +4653,17 @@ DBusMessage * wid_dbus_interface_show_wtp_basic_information(DBusConnection *conn
 
 			wid_syslog_debug_debug(WID_DBUS,"forward_mode =%d\n", WTP[i]->forward_mode);
 			dbus_message_iter_append_basic(&iter_struct, DBUS_TYPE_BYTE, &WTP[i]->forward_mode);
-			
-			
+
+			wid_syslog_err("code version =%s\n", WTP[i]->codever);
+			if(WTP[i]->codever== NULL){
+    			dbus_message_iter_append_basic (&iter_struct,
+    											 DBUS_TYPE_STRING,
+    											 &(no_info));
+    		}else{
+    			dbus_message_iter_append_basic (&iter_struct,
+    											 DBUS_TYPE_STRING,
+    											 &(WTP[i]->codever));
+    		}
     		dbus_message_iter_close_container (&iter_array, &iter_struct);
 		
     		CW_FREE_OBJECT_WID(model_info->sw_name);

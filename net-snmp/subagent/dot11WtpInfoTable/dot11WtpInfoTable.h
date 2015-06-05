@@ -193,8 +193,11 @@ size_t      wtpManufactureDate_len; /* # of char elements, not bytes */
          */
    u_long   wtpForwardMode;
     
-        
-    
+        /*
+         * wtpCodeVersionInfo(22)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+         */
+   char   wtpCodeVersionInfo[255];
+size_t      wtpCodeVersionInfo_len; /* # of char elements, not bytes */
 } dot11WtpInfoTable_data;
 
 

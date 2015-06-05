@@ -42,13 +42,15 @@ extern "C" {
     
 #define COLUMN_WTPFORWARDMODE         21
     
-#define COLUMN_WTPIPV6PREFIX         22
+#define COLUMN_WTPCODEVERSIONINFO         22
     
-#define COLUMN_WTPIPV6TYPE         23
+//#define COLUMN_WTPIPV6PREFIX         22
+    
+//#define COLUMN_WTPIPV6TYPE         23
     
 
 #define DOT11WTPINFOTABLE_MIN_COL   COLUMN_WTPMACADDR
-#define DOT11WTPINFOTABLE_MAX_COL   COLUMN_WTPFORWARDMODE
+#define DOT11WTPINFOTABLE_MAX_COL   COLUMN_WTPCODEVERSIONINFO
 
     /*
      * change flags for writable columns

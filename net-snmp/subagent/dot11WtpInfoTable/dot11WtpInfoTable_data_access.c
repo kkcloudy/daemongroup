@@ -816,10 +816,21 @@ dot11WtpInfoTable_cache_load(netsnmp_container *container)
      * make sure there is enough space for wtpIpv6-Prefix data
      */
 
-
-	
-    
-
+    /*
+     * setup/save data for wtpCodeVersionInfo
+     * wtpCodeVersionInfo(22)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H
+     */
+    /** no mapping */
+    /*
+     * make sure there is enough space for wtpCodeVersionInfo data
+     */
+	unsigned int wtpCodeVersionInfo_len = 0;
+	if(q->wtpCodeVersionInfo) {
+		wtpCodeVersionInfo_len = MIN(strlen(q->wtpCodeVersionInfo), sizeof(rowreq_ctx->data.wtpCodeVersionInfo) - 1);
+        rowreq_ctx->data.wtpCodeVersionInfo_len = wtpCodeVersionInfo_len * sizeof(rowreq_ctx->data.wtpCodeVersionInfo[0]);
+        memcpy( rowreq_ctx->data.wtpCodeVersionInfo, q->wtpCodeVersionInfo, rowreq_ctx->data.wtpCodeVersionInfo_len );
+		snmp_log(LOG_ERR,"q->wtpCodeVersionInfo = %s  rowreq_ctx->data.wtpCodeVersionInfo = %s\n",(q->wtpCodeVersionInfo),(rowreq_ctx->data.wtpCodeVersionInfo));
+	}
         /*
          * insert into table container
          */

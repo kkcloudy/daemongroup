@@ -722,9 +722,11 @@ rc = wtpManufactureDate_get(rowreq_ctx, (char **)&var->val.string, &var->val_len
     var->type = ASN_INTEGER;
 rc = wtpForwardMode_get(rowreq_ctx, (u_long *)var->val.string );
         break;
-
-    
-
+    /* wtpCodeVersionInfo(22)/DisplayString/ASN_OCTET_STR/char(char)//L/A/w/e/R/d/H */
+    case COLUMN_WTPCODEVERSIONINFO:
+    var->type = ASN_OCTET_STR;
+rc = wtpCodeVersionInfo_get(rowreq_ctx, (char **)&var->val.string, &var->val_len );
+        break;
      default:
          snmp_log(LOG_ERR,"unknown column %d in _dot11WtpInfoTable_get_column\n", column);
          break;

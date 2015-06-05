@@ -2452,6 +2452,89 @@ wtpForwardMode_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, u_long * wtpForwar
     return MFD_SUCCESS;
 } /* wtpForwardMode_get */
 
+/*---------------------------------------------------------------------
+ * DOT11-WTP-MIB::dot11WtpInfoEntry.wtpCodeVersionInfo
+ * wtpCodeVersionInfo is subid 22 of dot11WtpInfoEntry.
+ * Its status is Current, and its access level is ReadOnly.
+ * OID: .1.3.6.1.4.1.31656.6.1.1.1.1.1.22
+ * Description:
+The code version of the AP device.
+ *
+ * Attributes:
+ *   accessible 1     isscalar 0     enums  0      hasdefval 0
+ *   readable   1     iscolumn 1     ranges 1      hashint   1
+ *   settable   0
+ *   hint: 255a
+ *
+ * Ranges:  0 - 255;
+ *
+ * Its syntax is DisplayString (based on perltype OCTETSTR)
+ * The net-snmp type is ASN_OCTET_STR. The C type decl is char (char)
+ * This data type requires a length.  (Max 255)
+ */
+/**
+ * Extract the current value of the wtpCodeVersionInfo data.
+ *
+ * Set a value using the data context for the row.
+ *
+ * @param rowreq_ctx
+ *        Pointer to the row request context.
+ * @param wtpCodeVersionInfo_val_ptr_ptr
+ *        Pointer to storage for a char variable
+ * @param wtpCodeVersionInfo_val_ptr_len_ptr
+ *        Pointer to a size_t. On entry, it will contain the size (in bytes)
+ *        pointed to by wtpCodeVersionInfo.
+ *        On exit, this value should contain the data size (in bytes).
+ *
+ * @retval MFD_SUCCESS         : success
+ * @retval MFD_SKIP            : skip this node (no value for now)
+ * @retval MFD_ERROR           : Any other error
+*
+ * @note If you need more than (*wtpCodeVersionInfo_val_ptr_len_ptr) bytes of memory,
+ *       allocate it using malloc() and update wtpCodeVersionInfo_val_ptr_ptr.
+ *       <b>DO NOT</b> free the previous pointer.
+ *       The MFD helper will release the memory you allocate.
+ *
+ * @remark If you call this function yourself, you are responsible
+ *         for checking if the pointer changed, and freeing any
+ *         previously allocated memory. (Not necessary if you pass
+ *         in a pointer to static memory, obviously.)
+ */
+int
+wtpCodeVersionInfo_get( dot11WtpInfoTable_rowreq_ctx *rowreq_ctx, char **wtpCodeVersionInfo_val_ptr_ptr, size_t *wtpCodeVersionInfo_val_ptr_len_ptr )
+{
+   /** we should have a non-NULL pointer and enough storage */
+   netsnmp_assert( (NULL != wtpCodeVersionInfo_val_ptr_ptr) && (NULL != *wtpCodeVersionInfo_val_ptr_ptr));
+   netsnmp_assert( NULL != wtpCodeVersionInfo_val_ptr_len_ptr );
 
+
+    DEBUGMSGTL(("verbose:dot11WtpInfoTable:wtpCodeVersionInfo_get","called\n"));
+
+    netsnmp_assert(NULL != rowreq_ctx);
+
+/*
+ * TODO:231:o: |-> Extract the current value of the wtpCodeVersionInfo data.
+ * copy (* wtpCodeVersionInfo_val_ptr_ptr ) data and (* wtpCodeVersionInfo_val_ptr_len_ptr ) from rowreq_ctx->data
+ */
+    /*
+     * make sure there is enough space for wtpCodeVersionInfo data
+     */
+    if ((NULL == (* wtpCodeVersionInfo_val_ptr_ptr )) ||
+        ((* wtpCodeVersionInfo_val_ptr_len_ptr ) < (rowreq_ctx->data.wtpCodeVersionInfo_len* sizeof((* wtpCodeVersionInfo_val_ptr_ptr )[0])))) {
+        /*
+         * allocate space for wtpCodeVersionInfo data
+         */                                         
+        (* wtpCodeVersionInfo_val_ptr_ptr ) = malloc(rowreq_ctx->data.wtpCodeVersionInfo_len* sizeof((* wtpCodeVersionInfo_val_ptr_ptr )[0]));
+        if(NULL == (* wtpCodeVersionInfo_val_ptr_ptr )) {
+            snmp_log(LOG_ERR,"could not allocate memory\n");
+            return MFD_ERROR;
+        }
+    }
+    (* wtpCodeVersionInfo_val_ptr_len_ptr ) = rowreq_ctx->data.wtpCodeVersionInfo_len* sizeof((* wtpCodeVersionInfo_val_ptr_ptr )[0]);
+    memcpy( (* wtpCodeVersionInfo_val_ptr_ptr ), rowreq_ctx->data.wtpCodeVersionInfo, (* wtpCodeVersionInfo_val_ptr_len_ptr ) );
+	snmp_log(LOG_ERR,"wtpCodeVersionInfo_val_ptr_ptr = %s  rowreq_ctx->data.wtpCodeVersionInfo = %s\n",(* wtpCodeVersionInfo_val_ptr_ptr ),rowreq_ctx->data.wtpCodeVersionInfo);
+
+    return MFD_SUCCESS;
+} /* wtpCodeVersionInfo_get */
 
 /** @} */

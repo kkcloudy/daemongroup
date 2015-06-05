@@ -15,6 +15,7 @@ struct WtpBasicInfo{
     char *wtpProduct;				//AP制造商
     char *wtpDevTypeNum;			//AP类型
     char *wtpVersionInfo;			//AP软件版本
+    char *wtpCodeVersionInfo;		//AP Code软件版本
     unsigned long wtpUpTime;			//AP运行时间
     unsigned long wtpOnlineTime;		//AP上线时间
     char *wtpSysSoftName;			//AP软件名称
