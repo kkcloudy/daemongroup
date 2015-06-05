@@ -1882,6 +1882,7 @@ static int had_ipaddr_ops
 )
 {
 	int	i = 0, err	= 0;
+	int j;
 	struct in_addr in;
 	int uplink_ifidx = 0,downlink_ifidx = 0;
 	unsigned int	addr[1024] = {0};
@@ -1935,12 +1936,12 @@ static int had_ipaddr_ops
 			if(addF == 1)
 			{
 			    naddr = had_ipaddr_list( uplink_ifidx,addr,sizeof(addr)/sizeof(addr[0]) );
-			    for( i = 0; i < naddr; i++ ){
-                    if(vadd->addr == addr[i]){
+			    for( j = 0; j < naddr; j++ ){
+                    if(vadd->addr == addr[j]){
 			            break;
            	        }
 		        }
-		        if(i == naddr){
+		        if(j == naddr){
 			        vrrp_syslog_error("add uplink ip %d.%d.%d.%d ifindex %d failed!\n",
 								    ( vadd->addr >> 24) & 0xFF,
 								    (vadd->addr >> 16) & 0xFF,
@@ -2090,12 +2091,12 @@ static int had_ipaddr_ops
 			if(addF == 1)
 			{
 			    naddr = had_ipaddr_list( downlink_ifidx,addr,sizeof(addr)/sizeof(addr[0]) );
-			    for( i = 0; i < naddr; i++ ){
-                    if(vadd->addr == addr[i]){
+			    for( j = 0; j < naddr; j++ ){
+                    if(vadd->addr == addr[j]){
 			            break;
            	        }
 		        }
-		        if(i == naddr){
+		        if(j == naddr){
 			        vrrp_syslog_error("add downlink ip %d.%d.%d.%d ifindex %d failed!\n",
 								    ( vadd->addr >> 24) & 0xFF,
 								    (vadd->addr >> 16) & 0xFF,
