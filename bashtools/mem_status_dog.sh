@@ -78,7 +78,7 @@ do
 		
 		sleep 50
 		
-		portSLoad=`sudo netstat -nap | grep "snmpd" | grep ":161" | awk '{print $2}'`
+		portSLoad=`sudo netstat -nap | grep "snmpd" | grep ":161" | grep -v "udp6" | awk '{print $2}'`
 	
 		if [ x$portSLoad == x"" ];then
                         Spid=`ps -C snmpd -o pid= | sed '2,200d'`
