@@ -2038,7 +2038,7 @@ DBusMessage * wid_dbus_scanlocate_show_running_config_start(DBusConnection *conn
 		
 			}
 
-			totalLen += sprintf(cursor,"exit\n");
+			totalLen += sprintf(cursor," exit\n");
 			cursor = showStr + totalLen;
 		}
 	}

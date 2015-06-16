@@ -261,6 +261,7 @@ int wifi_assemble_udp_ip(struct sk_buff *skb, wifi_dev_private_t* priv){
 		}
 	}else{
 		printk(KERN_DEBUG "wifi error wifi_assemble_udp_ip get ap %02X:%02X:%02X:%02X:%02X:%02X ip failed\n",priv->apmac[0],priv->apmac[1],priv->apmac[2],priv->apmac[3],priv->apmac[4],priv->apmac[5]);
+        dev_put(local);
 		return WIFI_ERR;
 	}
 
